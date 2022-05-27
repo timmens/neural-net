@@ -43,7 +43,7 @@ def plot_examples(data, *, n_examples=4, figsize=(10, 5), fontsize=30, random=Tr
 
 def plot_performance(log):
 
-    fig, axs = plt.subplots(1, 2, figsize=(10, 4))
+    fig, axs = plt.subplots(2, 1, figsize=(10, 8))
     axs[0].plot(log.loss)
     axs[0].set_xlabel("# Batch Updates")
     axs[0].set_ylabel("Batch Loss")

@@ -1,5 +1,7 @@
+from dataclasses import dataclass
 from typing import List
 from typing import NamedTuple
+from typing import Tuple
 
 import jax
 import jax.numpy as jnp
@@ -7,18 +9,90 @@ from jax import jit
 from jax import value_and_grad
 from jax import vmap
 from jax.example_libraries.optimizers import adam
+from jax.example_libraries.optimizers import OptimizerState
 from jax.example_libraries.optimizers import sgd
 from jax.nn import logsumexp
 from jax.nn import relu
 from jax.nn import sigmoid
+from jaxlib.xla_extension import DeviceArray
 from nnet.data import get_batch
 from tqdm import tqdm
+
+
+def build_network(
+    data,
+    *,
+    structure,
+    loss_type,
+    activation_type,
+    algorithm,
+    tqdm=tqdm,
+    step_size=0.01,
+    key=None,
+):
+
+    # random number generator key
+    if key is None:
+        key = jax.random.PRNGKey(1)
+
+    # define layer structure
+    layer = get_layer(activation_type)
+
+    # get forward pass / predict function
+    forward_pass = get_forward_pass_func(layer)
+
+    # get loss function
+    loss_func = get_loss_func(forward_pass=forward_pass, loss_type=loss_type)
+
+    # get accuracy function
+    compute_accuracy = get_accuracy_func(forward_pass)
+
+    # initialize start parameters
+    start_params = get_start_params(structure, key=key)
+
+    # get optimizer triplet
+    opt_state, opt_update, get_params = get_optimizer_triplet(
+        algorithm=algorithm, start_params=start_params, step_size=step_size
+    )
+
+    # get update step
+    update_params = get_update_func(get_params, opt_update, loss_func)
+
+    # get fitting function
+    fit = get_fitting_function(
+        data=data,
+        update_params=update_params,
+        compute_accuracy=compute_accuracy,
+        get_params=get_params,
+        opt_state=opt_state,
+        tqdm=tqdm,
+    )
+
+    # get predict function
+    predict = get_predict_func(forward_pass)
+
+    network = Network(
+        fit=fit,
+        predict=predict,
+    )
+    return network
+
+
+def get_predict_func(forward_pass):
+    def _predict_func(params, images):
+
+        predictions = forward_pass(params, images)
+        predictions = predictions.argmax(axis=1)
+
+        return predictions
+
+    return _predict_func
 
 
 def get_fitting_function(
     data, update_params, compute_accuracy, get_params, opt_state, *, tqdm=tqdm
 ):
-    def _fitting(n_epochs, batch_size, verbose=False, show_progress=True):
+    def _fit(n_epochs, batch_size, verbose=False, show_progress=True):
 
         nonlocal opt_state
 
@@ -98,14 +172,14 @@ def get_fitting_function(
             **{key: jax.numpy.stack(val) for key, val in log._asdict().items()}
         )
 
-        result = {
-            "opt_state": opt_state,
-            "log": log,
-            "params": params,
-        }
+        result = NetworkResults(
+            opt_state=opt_state,
+            log=log,
+            params=params,
+        )
         return result
 
-    return _fitting
+    return _fit
 
 
 def get_optimizer_triplet(algorithm, *, start_params, step_size):
@@ -153,12 +227,12 @@ def get_loss_func(forward_pass, loss_type):
         "mean_square": _mean_square,
     }
 
-    _loss_func = LOSS_FUNCTIONS[loss_type]
+    _loss = LOSS_FUNCTIONS[loss_type]
 
     @jit
     def _loss_func(params, images, onehot):
         predictions = forward_pass(params, images)
-        return _loss_func(predictions, onehot)
+        return _loss(predictions, onehot)
 
     return _loss_func
 
@@ -183,11 +257,11 @@ def get_forward_pass_func(layer):
     return vmap(_forward_pass, in_axes=(None, 0), out_axes=0)
 
 
-def get_layer(activation_func):
+def get_layer(activation_type):
 
     ACTIVATION_FUNCTIONS = {"sigmoid": sigmoid, "relu": relu}  # noqa: N806
 
-    _activation_func = ACTIVATION_FUNCTIONS[activation_func]
+    _activation_func = ACTIVATION_FUNCTIONS[activation_type]
 
     @jit
     def _layer(params, x):
@@ -197,9 +271,9 @@ def get_layer(activation_func):
     return jax.jit(_layer)
 
 
-def get_start_params(sizes, key):
+def get_start_params(structure, key):
     """Initialize the weights of network using Gaussian variables."""
-    keys = jax.random.split(key, len(sizes))
+    keys = jax.random.split(key, len(structure))
 
     def _initialize_layer(m, n, key, scale=0.01):
         w_key, b_key = jax.random.split(key)
@@ -208,7 +282,8 @@ def get_start_params(sizes, key):
         return weights, bias
 
     initialized = [
-        _initialize_layer(m, n, k) for m, n, k in zip(sizes[:-1], sizes[1:], keys)
+        _initialize_layer(m, n, k)
+        for m, n, k in zip(structure[:-1], structure[1:], keys)
     ]
     return initialized
 
@@ -225,14 +300,27 @@ def _mean_square(predictions, onehot):
     return jnp.sum((pred - onehot) ** 2)
 
 
+@dataclass
+class Network:
+    fit: callable
+    predict: callable
+
+
+@dataclass
+class NetworkResults:
+    opt_state: OptimizerState
+    log: NamedTuple
+    params: List[Tuple[DeviceArray, DeviceArray]]
+
+
 class Logging(NamedTuple):
-    test: List[float] = []  # testing accuracy
     train: List[float] = []  # training accuracy
+    test: List[float] = []  # testing accuracy
     loss: List[float] = []  # training loss
 
-    def add_accuracy(self, test, train):
-        self.test.append(test)
+    def add_accuracy(self, train, test):
         self.train.append(train)
+        self.test.append(test)
 
     def add_loss(self, value):
         self.loss.append(value)
