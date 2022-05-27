@@ -1,0 +1,40 @@
+name: nnet
+
+channels:
+  - conda-forge
+  - nodefaults
+
+dependencies:
+  - python >=3.8
+  - pip
+  - setuptools_scm
+  - toml
+
+  # Reproducibility
+  - conda-lock
+
+  # Package dependencies
+  - pytask >=0.2
+  - pandas
+  - numpy
+  - jupyterlab
+  - seaborn
+  - jax
+
+  # Misc
+  - black
+  - nb_black
+  - ipython
+  - pre-commit
+  - pytest
+  - pytest-cov
+  - pytest-xdist
+  - tox-conda
+
+  - pip:
+    - -e .
+    - black
+    - blackcellmagic
+    - pre-commit
+    - torch
+    - torchvision
