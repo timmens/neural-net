@@ -19,11 +19,20 @@ To get started, create and activate the environment with
 
 ```bash
 $ cd 'into project root'
-$ conda/mamba env create -f environment.yml
+$ conda env create -f environment.yml
 $ conda activate nnet
 ```
 
-Now you can run the relevant notebooks.
+This install the package dependencies and the project itself. You can then import
+functions defined in the repository as
+
+```python
+from nnet.network import build_network
+from nnet.plotting import plot_examples
+```
+
+or you run the notebook locally ---or view it on
+[nbviewer](https://nbviewer.org/github/timmens/neural-net/blob/main/src/nnet/neural_network.ipynb).
 
 ## Credits
 
