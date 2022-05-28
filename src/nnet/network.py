@@ -180,7 +180,7 @@ def get_fitting_function(
 
         result = NetworkResults(
             opt_state=opt_state,
-            log=log.flatten_entries(),
+            log=log.history_asarray(),
             params=params,
         )
         return result
@@ -326,14 +326,21 @@ class Logging:
     loss: Union[List[float], DeviceArray] = field(default_factory=list)
 
     def add_accuracy(self, train, test):
-        self.train.append(train)
-        self.test.append(test)
+        if isinstance(self.train, list):
+            self.train.append(train)
+            self.test.append(test)
+        else:
+            self.train = jnp.append(self.train, train)
+            self.test = jnp.append(self.test, test)
 
-    def add_loss(self, value):
-        self.loss.append(value)
+    def add_loss(self, loss):
+        if isinstance(self.loss, list):
+            self.loss.append(loss)
+        else:
+            self.loss = jnp.append(self.loss, loss)
 
-    def flatten_entries(self):
-        train = jnp.stack(self.train)
-        test = jnp.stack(self.test)
-        loss = jnp.stack(self.loss)
-        return Logging(train=train, test=test, loss=loss)
+    def history_asarray(self):
+        self.train = jnp.stack(self.train)
+        self.test = jnp.stack(self.test)
+        self.loss = jnp.stack(self.loss)
+        return self
