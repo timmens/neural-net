@@ -1,7 +1,7 @@
 import gzip
 import warnings
+from dataclasses import dataclass
 from pathlib import Path
-from typing import NamedTuple
 from urllib.request import urlretrieve
 
 import jax.numpy as jnp
@@ -12,7 +12,7 @@ from nnet.config import NUM_CLASSES
 
 
 def get_batch(batch_id, data, *, batch_size):
-    """Extract batch from data.
+    """Extract a batch from data.
 
     Args:
         batch_id (int): The batch id.
@@ -30,6 +30,9 @@ def get_batch(batch_id, data, *, batch_size):
 
 def get_mnist_data(path=None):
     """Fetch training and testing mnist data.
+
+    This function is inspired by
+    https://github.com/RobertTLange/code-and-blog/tree/master/04_jax_intro.
 
     Args:
         path (str): Directory containing the data. Create if nonexistent. Download any
@@ -132,17 +135,15 @@ def get_mnist_data(path=None):
     return data
 
 
-class Data(NamedTuple):
-    """Data container."""
-
+@dataclass
+class Data:
     images: DeviceArray = None
     labels: DeviceArray = None
     onehot: DeviceArray = None
     predictions: DeviceArray = None
 
 
-class TrainTestContainer(NamedTuple):
-    """Train/test container."""
-
+@dataclass
+class TrainTestContainer:
     train: object
     test: object

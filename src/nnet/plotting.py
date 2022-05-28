@@ -1,3 +1,9 @@
+"""Plotting code.
+
+The functions are inspired and copied from
+https://github.com/RobertTLange/code-and-blog/tree/master/04_jax_intro
+
+"""
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
@@ -56,7 +62,6 @@ def plot_performance(log):
     axs[1].set_title("Prediction Accuracy")
     axs[1].legend()
 
-    # Give data more room to bloom!
     for i in range(2):
         axs[i].spines["top"].set_visible(False)
         axs[i].spines["right"].set_visible(False)

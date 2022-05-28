@@ -1,7 +1,10 @@
 from dataclasses import dataclass
+from dataclasses import field
+from functools import partial
 from typing import List
 from typing import NamedTuple
 from typing import Tuple
+from typing import Union
 
 import jax
 import jax.numpy as jnp
@@ -51,9 +54,8 @@ def build_network(
     start_params = get_start_params(structure, key=key)
 
     # get optimizer triplet
-    opt_state, opt_update, get_params = get_optimizer_triplet(
-        algorithm=algorithm, start_params=start_params, step_size=step_size
-    )
+    optimizer = get_optimizer(algorithm=algorithm, step_size=step_size)
+    opt_init, opt_update, get_params = optimizer()
 
     # get update step
     update_params = get_update_func(get_params, opt_update, loss_func)
@@ -63,8 +65,9 @@ def build_network(
         data=data,
         update_params=update_params,
         compute_accuracy=compute_accuracy,
+        start_params=start_params,
         get_params=get_params,
-        opt_state=opt_state,
+        opt_init=opt_init,
         tqdm=tqdm,
     )
 
@@ -90,11 +93,18 @@ def get_predict_func(forward_pass):
 
 
 def get_fitting_function(
-    data, update_params, compute_accuracy, get_params, opt_state, *, tqdm=tqdm
+    data,
+    update_params,
+    compute_accuracy,
+    start_params,
+    get_params,
+    opt_init,
+    *,
+    tqdm=tqdm,
 ):
     def _fit(n_epochs, batch_size, verbose=False, show_progress=True):
 
-        nonlocal opt_state
+        opt_state = opt_init(start_params)
 
         ################################################################################
         # initialize logging, parameters and batching
@@ -102,7 +112,7 @@ def get_fitting_function(
 
         log = Logging()
 
-        params = get_params(opt_state)  # starting parameters
+        params = get_params(opt_state)  # starting parameters that can be overwritten
 
         n_batches = len(data.train.labels) // batch_size
 
@@ -168,13 +178,9 @@ def get_fitting_function(
         # prepare output
         ################################################################################
 
-        log = Logging(
-            **{key: jax.numpy.stack(val) for key, val in log._asdict().items()}
-        )
-
         result = NetworkResults(
             opt_state=opt_state,
-            log=log,
+            log=log.flatten_entries(),
             params=params,
         )
         return result
@@ -182,7 +188,7 @@ def get_fitting_function(
     return _fit
 
 
-def get_optimizer_triplet(algorithm, *, start_params, step_size):
+def get_optimizer(algorithm, *, step_size):
 
     OPTIMIZERS = {  # noqa: N806
         "adam": adam,
@@ -190,10 +196,8 @@ def get_optimizer_triplet(algorithm, *, start_params, step_size):
     }
 
     optimizer = OPTIMIZERS[algorithm]
-
-    opt_init, opt_update, get_params = optimizer(step_size=step_size)
-    opt_state = opt_init(start_params)
-    return opt_state, opt_update, get_params
+    optimizer = partial(optimizer, step_size=step_size)
+    return optimizer
 
 
 def get_update_func(get_params, opt_update, loss_func):
@@ -313,10 +317,13 @@ class NetworkResults:
     params: List[Tuple[DeviceArray, DeviceArray]]
 
 
-class Logging(NamedTuple):
-    train: List[float] = []  # training accuracy
-    test: List[float] = []  # testing accuracy
-    loss: List[float] = []  # training loss
+@dataclass
+class Logging:
+    # training and testing accuracy
+    train: Union[List[float], DeviceArray] = field(default_factory=list)
+    test: Union[List[float], DeviceArray] = field(default_factory=list)
+    # training loss
+    loss: Union[List[float], DeviceArray] = field(default_factory=list)
 
     def add_accuracy(self, train, test):
         self.train.append(train)
@@ -324,3 +331,9 @@ class Logging(NamedTuple):
 
     def add_loss(self, value):
         self.loss.append(value)
+
+    def flatten_entries(self):
+        train = jnp.stack(self.train)
+        test = jnp.stack(self.test)
+        loss = jnp.stack(self.loss)
+        return Logging(train=train, test=test, loss=loss)
