@@ -23,7 +23,7 @@ $ conda env create -f environment.yml
 $ conda activate nnet
 ```
 
-This install the package dependencies and the project itself. You can then import
+This installs the package dependencies and the project itself. You can then import
 functions defined in the repository as
 
 ```python
