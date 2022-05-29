@@ -14,16 +14,15 @@ from jax import vmap
 from jax.example_libraries.optimizers import adam
 from jax.example_libraries.optimizers import OptimizerState
 from jax.example_libraries.optimizers import sgd
-from jax.nn import logsumexp
 from jax.nn import relu
 from jax.nn import sigmoid
+from jax.nn import softmax
 from jaxlib.xla_extension import DeviceArray
 from nnet.data import get_batch
 from tqdm import tqdm
 
 
 def build_network(
-    data,
     *,
     structure,
     loss_type,
@@ -62,7 +61,6 @@ def build_network(
 
     # get fitting function
     fit = get_fitting_function(
-        data=data,
         update_params=update_params,
         compute_accuracy=compute_accuracy,
         start_params=start_params,
@@ -82,18 +80,17 @@ def build_network(
 
 
 def get_predict_func(forward_pass):
-    def _predict_func(params, images):
+    def _predict(params, images):
 
         predictions = forward_pass(params, images)
         predictions = predictions.argmax(axis=1)
 
         return predictions
 
-    return _predict_func
+    return _predict
 
 
 def get_fitting_function(
-    data,
     update_params,
     compute_accuracy,
     start_params,
@@ -102,8 +99,24 @@ def get_fitting_function(
     *,
     tqdm=tqdm,
 ):
-    def _fit(n_epochs, batch_size, verbose=False, show_progress=True):
+    def _fit(data, *, n_epochs, batch_size, tol=1e-5, show_progress=True):
+        """Fit a neural network to data.
 
+        Args:
+            data (TrainTestContainer): The training and testing data. See module data.py
+            n_epochs (int): Number of epochs.
+            batch_size (int): Batch size.
+            tol (float): If training accuracy between two epochs is below tol the
+                training stops.
+            show_progess (bool): Whether to show a progress bar.
+
+        Returns:
+            NetworkResults: The network results. Has attributes
+            - opt_state (OptimizerState): The optimizer state
+            - log (Logging): The log.
+            - params: The fitted parameters.
+
+        """
         opt_state = opt_init(start_params)
 
         ################################################################################
@@ -167,20 +180,20 @@ def get_fitting_function(
             test_acc = compute_accuracy(params, data.test)
 
             log.add_accuracy(train_acc, test_acc)
-            if verbose:
-                print(  # noqa: T001
-                    f"Epoch {epoch_id} | "
-                    f"Train A: {train_acc:0.3f} | "
-                    f"Test A: {test_acc:0.3f}"
-                )
+
+            # stopping criteria
+            if jnp.abs(log.train[-1] - log.train[-2]) < tol:
+                break
 
         ################################################################################
         # prepare output
         ################################################################################
 
+        log.histories_asarray()
+
         result = NetworkResults(
             opt_state=opt_state,
-            log=log.history_asarray(),
+            log=log,
             params=params,
         )
         return result
@@ -244,11 +257,6 @@ def get_loss_func(forward_pass, loss_type):
 def get_forward_pass_func(layer):
     @jit
     def _forward_pass(params, activations):
-        """Compute the forward pass for each example individually.
-
-        This is the predict step.
-
-        """
         # loop over hidden layers
         for w, b in params[:-1]:
             activations = layer([w, b], activations)
@@ -256,7 +264,8 @@ def get_forward_pass_func(layer):
         # transform last layer
         last_w, last_b = params[-1]
         logits = jnp.dot(last_w, activations) + last_b
-        return logits - logsumexp(logits)
+        output = softmax(logits)
+        return output
 
     return vmap(_forward_pass, in_axes=(None, 0), out_axes=0)
 
@@ -275,33 +284,31 @@ def get_layer(activation_type):
     return jax.jit(_layer)
 
 
-def get_start_params(structure, key):
+def get_start_params(structure, key, scale=0.01):
     """Initialize the weights of network using Gaussian variables."""
     keys = jax.random.split(key, len(structure))
 
-    def _initialize_layer(m, n, key, scale=0.01):
+    def _initialize_layer(in_d, out_d, key):
         w_key, b_key = jax.random.split(key)
-        weights = scale * jax.random.normal(w_key, (n, m))
-        bias = scale * jax.random.normal(b_key, (n,))
+        weights = scale * jax.random.normal(w_key, (out_d, in_d))
+        bias = scale * jax.random.normal(b_key, (out_d,))
         return weights, bias
 
     initialized = [
-        _initialize_layer(m, n, k)
-        for m, n, k in zip(structure[:-1], structure[1:], keys)
+        _initialize_layer(in_d, out_d, _key)
+        for in_d, out_d, _key in zip(structure[:-1], structure[1:], keys)
     ]
     return initialized
 
 
 @jit
-def _cross_entropy(predictions, labels):
-    return -jnp.sum(predictions * labels)
+def _cross_entropy(predictions, onehot):
+    return -jnp.sum(jnp.log(predictions) * onehot)
 
 
 @jit
 def _mean_square(predictions, onehot):
-    pred = jax.nn.sigmoid(predictions)
-    pred = pred / pred.sum(axis=1).reshape(-1, 1)
-    return jnp.sum((pred - onehot) ** 2)
+    return jnp.sum((predictions - onehot) ** 2)
 
 
 @dataclass
@@ -339,8 +346,7 @@ class Logging:
         else:
             self.loss = jnp.append(self.loss, loss)
 
-    def history_asarray(self):
+    def histories_asarray(self):
         self.train = jnp.stack(self.train)
         self.test = jnp.stack(self.test)
         self.loss = jnp.stack(self.loss)
-        return self
