@@ -20,6 +20,7 @@ dependencies:
   - jupyterlab
   - seaborn
   - jax
+  - scikit-learn
 
   # Misc
   - black
@@ -36,5 +37,3 @@ dependencies:
     - black
     - blackcellmagic
     - pre-commit
-    - torch
-    - torchvision

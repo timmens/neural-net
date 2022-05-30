@@ -1,6 +1,9 @@
 # bld
 bld/*
 
+#pdfs
+*.pdf
+
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
