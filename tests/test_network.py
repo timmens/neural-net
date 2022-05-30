@@ -51,7 +51,7 @@ def test_classification_problem():
     )
 
     result = network.fit(
-        data, n_epochs=100, batch_size=100, tol=1e-7, show_progess=False
+        data, n_epochs=100, batch_size=100, tol=1e-7, show_progress=False
     )
 
     assert result.log.test[-1] > 0.96
