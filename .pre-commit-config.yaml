@@ -3,7 +3,6 @@ repos:
     rev: v4.2.0
     hooks:
     -   id: check-added-large-files
-        args: ['--maxkb=25']
     -   id: check-case-conflict
     -   id: check-merge-conflict
     -   id: check-vcs-permalinks
@@ -74,6 +73,7 @@ repos:
     rev: v2.1.0
     hooks:
     -   id: codespell
+        args: [--skip, "*.html"]
 -   repo: https://github.com/executablebooks/mdformat
     rev: 0.7.14
     hooks:

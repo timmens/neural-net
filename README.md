@@ -13,6 +13,11 @@ network is trained on the MNIST data set to recognize hand-written digits.
 
 > Summer 2020, Tim Mensinger
 
+## Presentation
+
+You can view the presentation
+[here](https://htmlpreview.github.io/?https://github.com/timmens/neural-net/tree/main/presentation/main.html)
+
 ## Usage
 
 To get started, create and activate the environment with
