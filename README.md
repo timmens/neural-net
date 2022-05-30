@@ -16,7 +16,7 @@ network is trained on the MNIST data set to recognize hand-written digits.
 ## Presentation
 
 You can view the presentation
-[here](https://htmlpreview.github.io/?https://github.com/timmens/neural-net/tree/main/presentation/main.html)
+[here](http://htmlpreview.github.io/?https://github.com/timmens/neural-net/blob/main/presentation/main.html).
 
 ## Usage
 
