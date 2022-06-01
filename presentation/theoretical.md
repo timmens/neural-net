@@ -23,7 +23,7 @@ Topics in Econometrics and Statistics, Summer 2020
 1. Introduction
 2. Approximation Theorems
 3. Training
-4. Gradient Descent (if there is time...)
+4. Bonus (Gradient Descent)
 
 ---
 
@@ -89,8 +89,8 @@ mjx-container {
 
 <br/>
 
-Let $f \in C([0, 1], \mathbb{R})$, then there exists a sequence of polynomials $\{p_n\}$
-that converges uniformly to $f$.
+Let $g \in C([0, 1], \mathbb{R})$, then there exists a sequence of polynomials $\{p_n\}$
+that converges uniformly to $g$.
 
 <br/>
 
@@ -144,6 +144,11 @@ that converges uniformly to $f$.
 * **Then:** $\mathcal{NN}_{P, H}^\sigma$ is dense in $C(K, \mathbb{R})$ **if** $H \geq P + 3$.
 
 ---
+### Caveats
+
+* Existence results
+
+* How large do $H$ and $L$ need to be in practice?
 
 ---
 
@@ -161,7 +166,7 @@ that converges uniformly to $f$.
 
 * $\theta = \left(\text{vec}(W_0), b_0, \text{vec}(W_1), b_1, \dots, \text{vec}(W_L), b_L, a \right)$
 
-* $\dim(\theta) = PH + H + H^2 + H + \dots + H^2 + H + H = \mathcal{O}(LH^2)$
+* $\dim(\theta) = PH + H + H^2 + H + \dots + H^2 + H + H = \mathcal{O}(PH + LH^2)$
 
 
 ---
@@ -170,7 +175,7 @@ that converges uniformly to $f$.
 * Data $\{(x_i, y_i) : i = 1, \dots, n\}$
 <br/>
 * $\mathbb{L}(\theta) = \frac{1}{n} \sum_i (y_i - f(x_i, \theta))^2$
-    * $\implies$ approximation of $\mathbb{E}[y_i|x_i=x]$
+    * $\implies$ yields approximation of $\mathbb{E}[y_i|x_i=x]$
 <br/>
 * Pick $\theta^\ast = \text{argmin}_\theta \, \mathbb{L}(\theta)$, and we are done! Right?
     * No...? &#128553;
