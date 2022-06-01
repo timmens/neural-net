@@ -8,7 +8,7 @@ paginate: true
 
 ## Neural Networks
 
-Topics in Econometrics and Statistics, Summer 2020
+Topics in Econometrics and Statistics, Summer 2022
 
 <br/>
 
@@ -124,9 +124,9 @@ that converges uniformly to $g$.
 
 * Let $\mathcal{N}_P^\sigma$ represent the class of NN's with activation function $\sigma$, input dimension $P$ and **one** hidden layer with arbitrary number of neurons.
 
-* Let $K \subset \mathbb{R}^P$ be compact.
+<br/>
 
-* **Then:** $\mathcal{N}_P^\sigma$ is dense in $C(K, \mathbb{R})$.
+* **Then:** $\mathcal{N}_P^\sigma$ is dense in $C([0, 1]^P, \mathbb{R})$.
 
 ---
 ###
@@ -139,9 +139,9 @@ that converges uniformly to $g$.
 
 * Let $\mathcal{NN}_{P, H}^\sigma$ represent the class of NN's with activation function $\sigma$, input dimension $P$ and an arbitrary number of hidden layers each with fixed width $H$.
 
-* Let $K \subset \mathbb{R}^P$ be compact.
+<br/>
 
-* **Then:** $\mathcal{NN}_{P, H}^\sigma$ is dense in $C(K, \mathbb{R})$ **if** $H \geq P + 3$.
+* **Then:** $\mathcal{NN}_{P, H}^\sigma$ is dense in $C([0,1]^P, \mathbb{R})$ **if** $H \geq P + 3$.
 
 ---
 ### Caveats
