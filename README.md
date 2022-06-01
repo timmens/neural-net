@@ -11,7 +11,7 @@ contains two presentations on the theoretical and practical side of neural netwo
 
 ### Topics in Econometrics and Statistics
 
-> Summer 2020, Tim Mensinger
+> Summer 2022, Tim Mensinger
 
 ## Presentation
 
@@ -30,6 +30,9 @@ $ decktape generic -s 1280x720 --load-pause 3000 file.html file.pdf
 ```
 
 ## Usage of the code
+
+> **Warning**
+> Jax is not supported on windows.
 
 To get started, create and activate the environment with
 
