@@ -23,6 +23,12 @@ clicking on the respective document icon:
 | Theoretical | [🗎](http://htmlpreview.github.io/?https://github.com/timmens/neural-net/blob/main/presentation/theoretical.html) |
 | Practical   | [🗎](http://htmlpreview.github.io/?https://github.com/timmens/neural-net/blob/main/presentation/practical.html)   |
 
+I use [marp](https://marp.app/) to convert my markdown files to html presentations. To get a pdf version simply call
+
+```bash
+$ decktape generic -s 1280x720 --load-pause 3000 file.html file.pdf
+```
+
 ## Usage of the code
 
 To get started, create and activate the environment with

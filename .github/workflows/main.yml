@@ -50,6 +50,7 @@ jobs:
         run: bash <(curl -s https://codecov.io/bash) -F unit -c
 
       - name: Run end-to-end tests.
+        if: runner.os != 'macOS' && matrix.python-version != '3.9'
         shell: bash -l {0}
         run: tox -e pytest -- src tests -m end_to_end --cov=./ --cov-report=xml -n auto
 
