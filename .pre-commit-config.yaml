@@ -3,6 +3,7 @@ repos:
     rev: v4.2.0
     hooks:
     -   id: check-added-large-files
+        args: ["--maxkb=1000"]
     -   id: check-case-conflict
     -   id: check-merge-conflict
     -   id: check-vcs-permalinks
@@ -69,11 +70,11 @@ repos:
       #     hooks:
       #     -   id: interrogate
       #         args: [-v, --fail-under=40]
--   repo: https://github.com/codespell-project/codespell
-    rev: v2.1.0
-    hooks:
-    -   id: codespell
-        args: [--skip, "*.html"]
+      # -   repo: https://github.com/codespell-project/codespell
+      #     rev: v2.1.0
+      #     hooks:
+      #     -   id: codespell
+      #         args: ["--skip=*.html,paper/"]
 -   repo: https://github.com/executablebooks/mdformat
     rev: 0.7.14
     hooks:

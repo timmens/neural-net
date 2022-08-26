@@ -1,0 +1,340 @@
+\section{Introduction}
+
+Another popular regression method now mainly developed in the machine learning
+literature are \emph{feed-forward} neural networks. The approximation quality of neural
+networks has been studied extensively in the literature. Several so called universal
+approximation theorems have been proven which show that under certain conditions on what
+is known as the \emph{architecture} of the network, neural networks can approximate any
+continuous function arbitrary well (\cite{Hornik.1991}). Statements like the universal
+approximation theorems and the empirical success of networks make them a suitable
+surrogate model candidate. Neural networks as surrogate models have been used across a
+wide variety of fields; see for example \cite{Holena.2010, Gang.2019, Tripathy.2018} to
+name a few.
+
+In the following I will shed light on the inner workings of feed-forward networks by
+showing that networks can be formulated analytically using simple linear algebra. I will
+also comment on the backpropagation algorithm which provides a way to estimate the
+parameters of a network using data. For a detailed description of neural networks and
+the backpropagation algorithm see \cite{Goodfellow.2016, Murphy.2012, Hastie.2008}.
+
+\subparagraph{General Notion}
+
+To understand how a statistical / machine learning method works one has to understand at
+least two separate parts. First, given a fixed set of parameters how does the method
+produce predictions, and second, how does the method estimate this set of parameters
+given data. Note also that there must not be only one estimation step. Linear models can
+be estimated using ordinary least squares but also through regularized approaches. To
+better understand how neural networks work let us ignore the estimation component for
+now.
+
+\begin{figure}
+\centering
+\begin{tikzpicture}[shorten >=1pt,->,draw=black!60, node distance=\layersep, scale=1.5]
+
+    \tikzstyle{every pin edge}=[<-,shorten <=1pt]
+    \tikzstyle{neuron}=[circle, draw=black!80, minimum size=17pt,inner sep=0pt]
+    \tikzstyle{input neuron}=[neuron];
+    \tikzstyle{output neuron}=[neuron];
+    \tikzstyle{hidden neuron}=[neuron];
+    \tikzstyle{annot} = [text width=4em, text centered]
+
+    % Draw the input layer nodes
+    \foreach \name / \y in {1,...,4}
+    % This is the same as writing \foreach \name / \y in {1/1,2/2,3/3,4/4}
+        \node[input neuron, pin=left:Input \y] (I-\name) at (0,-\y) {};
+
+    % Draw the first hidden layer nodes
+    \foreach \name / \y in {1,...,5}
+        \path[yshift=0.5cm]
+            node[hidden neuron] (H-\name) at (\layersep,-\y cm) {};
+
+    % Draw the second hidden layer nodes
+    \foreach \name / \y in {6/1,7/2,8/3,9/4,10/5}
+        \path[yshift=0.5cm]
+            node[hidden neuron] (H-\name) at (2 * \layersep,-\y cm) {};
+
+    % Draw the output layer node
+    \node[output neuron,pin={[pin edge={->}]right:Output}, right of=H-8] (O) {};
+
+    % Connect every node in the input layer with every node in the
+    % hidden layer.
+    \foreach \source in {1,...,4}
+        \foreach \dest in {1,...,5}
+            \path (I-\source) edge (H-\dest);
+
+    % Connect every node in the first hidden layer with every node in the
+    % second hidden layer.
+    \foreach \source in {1,...,5}
+        \foreach \dest in {6,...,10}
+            \path (H-\source) edge (H-\dest);
+
+    % Connect every node in the hidden layer with the output layer
+    \foreach \source in {6,...,10}
+        \path (H-\source) edge (O);
+
+    % Annotate the layers
+    \node[annot,above of=H-1, node distance=1cm] (hl1) {Hidden layer 1};
+    \node[annot,above of=H-6, node distance=1cm] (hl2) {Hidden layer 2};
+    \node[annot,left = 1.75cm of hl1] {Input layer};
+    \node[annot,right = 0.5cm of hl2] {Output layer};
+\end{tikzpicture}
+\caption{Depiction of a neural network. The network has 4 inputs, two hidden layers
+with 5 nodes each and a single output node.}
+\label{fig:neural_net}
+\end{figure}
+
+Consider the depiction of a two-layer network in figure \ref{fig:neural_net}. This
+neural network represents a function $g : \mathbb{R}^4 \to \mathbb{R}$. The input layer
+simply represents the input vector (feature vector) of the relation we wish to design /
+approximate. The edges connect the nodes between the layers. When considering the
+mathematical formulation we will see that the edges represent the weights of how much a
+node influences the results in a target node. At last, the output node stores the actual
+output. When modeling a function with multiple outcomes the output layer would have the
+respective number of nodes.
+
+To get started with the mathematical formulation focus on the connection between the
+input layer and a single hidden node, as visualized in figure
+\ref{fig:neural_net_single_connection}.
+
+\begin{figure}
+\centering
+\begin{tikzpicture}[shorten >=1pt,->,draw=black!25, node distance=\layersep, scale=1.5]
+
+    \tikzstyle{every pin edge}=[<-,shorten <=1pt, draw=black!90]
+    \tikzstyle{neuron}=[circle, draw=black!80, minimum size=17pt,inner sep=0pt]
+    \tikzstyle{input neuron}=[neuron, draw=black!90];
+    \tikzstyle{output neuron}=[neuron];
+    \tikzstyle{hidden neuron}=[neuron, draw=black!90];
+    \tikzstyle{hidden neuron background}=[neuron, draw=black!25];
+    \tikzstyle{annot} = [text width=4em, text centered]
+
+    % Draw the input layer nodes
+    \foreach \name / \y in {1,...,4}
+    % This is the same as writing \foreach \name / \y in {1/1,2/2,3/3,4/4}
+        \node[input neuron, pin=left:Input \y] (I-\name) at (0,-\y) {$x_\name$};
+
+    % Draw the first hidden layer nodes
+    \path[yshift=0.5cm]
+        node[hidden neuron] (H-2) at (\layersep,-2 cm) {$h$};
+    \foreach \name / \y in {1,3,4,5}
+        \path[yshift=0.5cm]
+            node[hidden neuron background] (H-\name) at (\layersep,-\y cm) {};
+
+    % Connect every node in the input layer with every node in the
+    % hidden layer.
+    \foreach \source in {1,...,4}
+        \foreach \dest in {1,3,4,5}
+            \path (I-\source) edge (H-\dest);
+    \foreach \source in {1,...,4}
+        \path (I-\source) edge[draw=black!90] (H-2);
+
+    % Annotate the layers
+    \node[annot,above of=H-1, node distance=1cm] (hl1) {Hidden layer 1};
+    \node[annot,left = 1.75cm of hl1] {Input layer};
+\end{tikzpicture}
+
+\caption{Depiction of the connection between the input layer and a single hidden node.}
+\label{fig:neural_net_single_connection}
+\end{figure}
+
+Let me call the second node in the hidden layer in figure
+\ref{fig:neural_net_single_connection} node $h$. The state of node $h$, that is, the
+numerical value it stores after the network receives an input $x = (x_1, x_2, x_3,
+x_4)^\top$, is simply given by
+\begin{align*}
+    h(x) = \sigma(w^\top x) \,,
+\end{align*}
+where $w \in \mathbb{R}^4$ denote the weights which are represented by the edges in the
+diagram and $\sigma$ denotes the so called \emph{activation function}. The idea of using
+an activation function comes from the biological nature of neural networks, in that it
+was observed that human neurons need a certain magnitude of input before firing
+(\cite{Goodfellow.2016}). Traditionally the most common activation function is the
+sigmoid function $\sigma: \mathbb{R} \to [0, 1], z \mapsto {1}/{(1 + e^z)}$ which is
+depicted in figure \ref{fig:sigmoid_function}.
+
+\begin{figure}[!ht]
+\centering
+\begin{tikzpicture}[scale=1]
+    \begin{axis}[
+        axis on top = true,
+        axis x line = bottom,
+        axis y line = left,
+        xlabel = $z$,
+        ylabel = $\sigma$
+    ]
+        \addplot[
+            domain = -5:5,
+            samples = 100
+        ]
+            {1/(1+exp(-x))};
+
+    \end{axis}
+\end{tikzpicture}
+\caption{Sigmoid function.}\label{fig:sigmoid_function}
+\end{figure}
+
+To compute the state of the hidden node in the second layer we need more detailed
+notation. Consider figure \ref{fig:neural_net_double_connection} and let me denote the
+second node of the second hidden layer again by node $h$.
+\begin{figure}[h!]
+\centering
+\begin{tikzpicture}[shorten >=1pt,->,draw=black!25, node distance=\layersep, scale=1.5]
+
+    \tikzstyle{every pin edge}=[<-,shorten <=1pt, draw=black!90]
+    \tikzstyle{neuron}=[circle, draw=black!80, minimum size=17pt,inner sep=0pt]
+    \tikzstyle{input neuron}=[neuron];
+    \tikzstyle{hidden neuron}=[neuron];
+    \tikzstyle{hidden neuron background}=[neuron, draw=black!25];
+    \tikzstyle{annot} = [text width=4em, text centered]
+
+    % Draw the input layer nodes
+    \foreach \name / \y in {1,...,4}
+    % This is the same as writing \foreach \name / \y in {1/1,2/2,3/3,4/4}
+        \node[input neuron, pin=left:Input \y] (I-\name) at (0,-\y) {$x_\name$};
+
+    % Draw the first hidden layer nodes
+    \foreach \name / \y in {1,...,5}
+        \path[yshift=0.5cm]
+            node[hidden neuron] (H-\name) at (\layersep,-\y cm) {$h_\name$};
+
+    % Draw the second hidden layer nodes
+    \path[yshift=0.5cm]
+        node[hidden neuron] (H-7) at (2 * \layersep,-2 cm) {$h$};
+    \foreach \name / \y in {6/1,8/3,9/4,10/5}
+        \path[yshift=0.5cm]
+            node[hidden neuron background] (H-\name) at (2 * \layersep,-\y cm) {};
+
+    % Connect every node in the input layer with every node in the
+    % hidden layer.
+    \foreach \source in {1,...,4}
+        \foreach \dest in {1,...,5}
+            \path (I-\source) edge[draw=black!90] (H-\dest);
+
+    % Connect every node in the first hidden layer with every node in the
+    % second hidden layer.
+    \foreach \source in {1,...,5}
+        \path (H-\source) edge[draw=black!90] (H-7);
+    \foreach \source in {1,...,5}
+        \foreach \dest in {6,8,9,10}
+            \path (H-\source) edge (H-\dest);
+
+    % Annotate the layers
+    \node[annot,above of=H-1, node distance=1cm] (hl1) {Hidden layer 1};
+    \node[annot,above of=H-6, node distance=1cm] (hl2) {Hidden layer 2};
+    \node[annot,left = 1.75cm of hl1] {Input layer};
+\end{tikzpicture}
+
+\caption{Depiction of the connection between the input layer and a single hidden node
+in the second hidden layer through the first hidden layer.}
+\label{fig:neural_net_double_connection}
+\end{figure}
+
+For each node $j=1,\dots,5$ in the first hidden layer we can compute the state using the
+input vector $x$, the respective weights $w_j$ and the activation function $\sigma$.
+This gives $h_j = \sigma(w_j^\top x)$ for each $j$. The values of the first hidden layer
+can be combined in a vector
+\begin{align*}
+    \mathbf{h}(x) :=
+        \begin{bmatrix}
+            \sigma(w_1^\top x)\\
+            \vdots\\
+            \sigma(w_5^\top x)
+        \end{bmatrix} \,,
+\end{align*}
+which can be further simplified by defining the weight matrix for the interactions
+between the input-layer and first hidden layer as $W := (w_1 \dots, w_5)^\top$ and
+allowing $\sigma$ to be extended to element-wise operations. Then
+\begin{align*}
+    \mathbf{h}(x) := \sigma(W x) \,.
+\end{align*}
+Because the internal structure of the network does not change the state of node $h$ is
+then simply given by
+\begin{align*}
+    h(x) = \sigma(w_h^\top \mathbf{h}(x)) \,,
+\end{align*}
+where $w_h$ denote the weights from the nodes in the first hidden layer to node $h$.
+
+Combining all of the above we can write out the analytical formulation of the output of
+the complete two-layer network depicted in figure \ref{fig:neural_net}. For this define
+$W_1$ as the weighting matrix from the input layer to the first hidden layer, $W_2$ as
+the weighting matrix from the first hidden layer to the second hidden layer, and let
+$w^*$ be the weighting vector from the last hidden layer to the final output node.
+Using again that $\sigma$ can be applied element-wise we get
+\begin{align*}
+    g(x) &= w^* \mathbf{h}_2(x)\\
+         &= w^* \sigma(W_2 \, \mathbf{h}_1(x))\\
+         &= w^* \sigma \big( W_2 \, \sigma(W_1 \, x) \big) \,.\tag{Neural Network}
+\end{align*}
+
+\begin{remark}\hfill
+    \begin{itemize}
+        \item  To keep the discussion simple I ignored that in most cases each target
+            node, say $h$, is computed with an intercept $w_0$, i.e. $h(x) = \sigma(w_0 +
+            w^\top x)$. In the literature this is called the \emph{bias}.
+        \item Note that the activation function is not applied to the output layer
+            as it maps its input to $[0, 1]$ but we want it to map to $\mathbb{R}$.
+        \item The number of hidden layers and the number of nodes per hidden layer are
+            collectively called the architecture of the network. There is no one best
+            architecture and scanning over all possible architectures is clearly
+            intractable. Most commonly one chooses a few architectures and compares
+            their performance using the methods proposed in section
+            \ref{subsec:model_comparison}.
+    \end{itemize}
+\end{remark}
+
+
+\subparagraph{Backpropagation.}
+To apply a neural net to a real world problem we have to calibrate the weights ($w^*,
+W_1, W_2$ in the above problem) using real data. This can be done using the gradient
+descent algorithm, where the \emph{backpropagation} technique is used to compute the
+gradients. Denote all parameters in the neural network by $w$, then given an initial
+guess $w_0$ gradient descent updates the parameter using the rule
+\begin{align*}
+    w_{t+1} \leftarrow w_t - \nu \sum_{i=1}^B \left.\frac{\partial L\left(y_i, g(x_i;
+        w)\right)}{\partial w} \right\vert_{w = w_t} \,,
+\end{align*}
+where $L$ again denotes some differentiable loss function and $0 < \nu < 1$ a learning
+parameter (compare this to \ref{eq:gradient_tree_learning}).  Without the ability to
+efficiently compute the gradient $\partial L / \partial w$ gradient descent would not be
+feasible. For a detailed explanation of the backpropagation technique see
+\cite{Goodfellow.2016}.
+
+
+\subparagraph{Extensions.}
+
+The easiest extension to the network I presented above is to use a different activation
+function; see \cite{Hara.1994} for a comparison. A popular choice is the rectified
+linear unit (ReLU) activation function, depicted in figure \ref{fig:relu_function}.
+\cite{Hinton.2017} provide empirical evidence that the ReLU function can improve upon
+the classical sigmoid function by accelerating the convergence of the gradient descent
+step.
+
+\begin{figure}[!ht]
+\centering
+\begin{tikzpicture}[scale=1]
+    \begin{axis}[
+        axis on top = true,
+        axis x line = bottom,
+        axis y line = left,
+        xlabel = $z$,
+        ylabel = $\sigma$,
+        ymin=-0.5
+    ]
+    \addplot[
+        domain=-3:5,
+        samples=100
+    ] {(x>=0)*x};
+    \end{axis}
+\end{tikzpicture}
+\caption{Rectified linear unit (ReLU) activation function.}\label{fig:relu_function}
+\end{figure}
+
+The number of parameters in a neural network can explode quickly. The network depicted
+in figure \ref{fig:neural_net} contains $4 \times 5 + 5 \times 5 + 5 \times 1 = 50$
+parameters (excluding biases). If the feature vector had dimension 100 and we had two
+hidden layers with 100 hidden nodes each, the number of paramaters would grow to $100
+\times 100 + 100 \times 100 + 100 = 20100$. It is clear from this that overfitting is an
+acute hazard in large networks. Many methods have been developed that can be used to
+mitigate this problem. Two important ones are the use of stochastic gradient descent
+instead of the classical gradient descent algorithm (\cite{Ruppert.1985}) and dropout
+regularization (\cite{Srivastava.2014}).
