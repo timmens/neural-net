@@ -3,6 +3,7 @@ name: nnet
 channels:
   - conda-forge
   - nodefaults
+  - h2oai
 
 dependencies:
   - python >=3.8
@@ -20,7 +21,11 @@ dependencies:
   - jupyterlab
   - seaborn
   - jax
+  - optax
+  - flax
   - scikit-learn
+  - catboost
+  - h2o
 
   # Misc
   - black

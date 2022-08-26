@@ -5,27 +5,96 @@ from pathlib import Path
 from urllib.request import urlretrieve
 
 import jax.numpy as jnp
+import numpy as np
 from jax.nn import one_hot
 from jaxlib.xla_extension import DeviceArray
 from nnet.config import BLD
 from nnet.config import NUM_CLASSES
 
 
-def get_batch(batch_id, data, *, batch_size):
-    """Extract a batch from data.
+# ======================================================================================
+# Simulation of regression model
+# ======================================================================================
+
+
+def simulate_data(
+    n_samples,
+    *,
+    n_features=None,
+    n_informative=None,
+    noise=0.5,
+    nonlinear=False,
+    seed=0,
+    return_coef=False,
+):
+    """Simulate regression data.
 
     Args:
-        batch_id (int): The batch id.
-        data (Data): The data container.
-        batch_size (int): Size of each batch.
+        n_samples (int): The number of samples.
+        n_features (int): The number of features. If None, the number is computed using
+            n_features = np.floor(0.1 * n_samples)
+        n_informative (int): The number of informative features, i.e., the number of
+            features used to build the linear model used to generate the output. If
+            None, is set to np.floor(0.1 * n_features).
+        noise (float): The standard deviation of the gaussian noise applied to the
+            output. Default is 0.5.
+        nonlinear (bool): Whether X influences Y through a nonlinear mapping.
+        seed (int): Random state initializer passed to `np.random.default_rng`. Default
+            is 0.
+        return_coef (bool): Whether the true coefficients should be returned.
 
     Returns:
-        tuple: (images, labels)
+        - X: np.ndarray of shape (n_samples, n_features). The input samples.
+        - y: np.ndarray of shape (n_samples,). The output values.
+        - coef: np.ndarray of shape (n_features,). The coefficient of the underlying
+        linear model.
 
     """
-    _from = batch_id * batch_size
-    _to = (batch_id + 1) * batch_size
-    return data.images[_from:_to], data.onehot[_from:_to]
+    rng = np.random.default_rng(seed=seed)
+
+    if n_features is None:
+        n_features = np.floor(0.1 * n_samples)
+
+    if n_informative is None:
+        n_informative = np.floor(0.1 * n_features)
+
+    X = rng.uniform(low=0, high=1, size=(n_samples, n_features))
+
+    X_informative = X[:, :n_informative]
+
+    coef = simulate_coefficients(n_params=n_informative)
+
+    noise = rng.normal(size=n_samples, scale=noise)
+
+    if nonlinear:
+        y = nonlinear_mapping(X_informative, coef) + noise
+    else:
+        y = X_informative @ coef + noise
+
+    if return_coef:
+        out = X, y, coef
+    else:
+        out = X, y
+
+    return out
+
+
+def simulate_coefficients(n_params):
+    rng = np.random.default_rng(seed=n_params)
+    coef = rng.integers(low=-1_000, high=1_000, size=n_params)
+    coef = coef / 1_000
+    coef = np.round(coef, decimals=2)
+    return coef
+
+
+def nonlinear_mapping(X, coef):
+    z = (X**2) @ coef
+    return np.minimum(0, z)
+
+
+# ======================================================================================
+# Loading of MNIST data set
+# ======================================================================================
 
 
 def get_mnist_data(path=None):
@@ -133,6 +202,23 @@ def get_mnist_data(path=None):
         ),
     )
     return data
+
+
+def get_batch(batch_id, data, *, batch_size):
+    """Extract a batch from data.
+
+    Args:
+        batch_id (int): The batch id.
+        data (Data): The data container.
+        batch_size (int): Size of each batch.
+
+    Returns:
+        tuple: (images, labels)
+
+    """
+    _from = batch_id * batch_size
+    _to = (batch_id + 1) * batch_size
+    return data.images[_from:_to], data.onehot[_from:_to]
 
 
 @dataclass
