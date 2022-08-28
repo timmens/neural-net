@@ -1,5 +1,33 @@
 \section{Introduction}
 
+\textcolor{red}{Short motivation why machine learning is interesting in econometrics}
+With the rise of cheap computing research and application of computer-aided statistical
+algorithm have skyrocketed. Machine learning, a sub-area of computational statistics,
+that lays specific focus on using complex algorithms has found itself a home at the
+computer science department. Other research areas have tried to utilize methods
+developed in the machine learning literature. Researchers in economics and econometrics
+have tried to find subproblems that could use the methodology. One of the main problems
+of using machine learning methods is that it is not straightforward to use them in
+settings where parameter inference is needed. Recent developments in econometrics have
+introduced estimators that require an estimation of nuisance functions where one is only
+interested in the prediction quality. Given high-level assumptions on these estimators
+one can utilize many different machine learning estimators that have a fast-enough
+convergence to the true function. In this paper I will investigate the convergence
+properties of one particular method, the feed-forward neural network.
+\textcolor{red}{Cite Chernozhukov etc.}
+
+The rest of the paper is structured are follows. In the remaining part of the
+introduction I will provide a small introduction to neural networks. This part can be
+skipped if the reader is familiar with neural networks.
+
+\paragraph{Neural Networks}
+
+In the following I will shed light on the inner workings of feed-forward networks by
+showing that networks can be formulated analytically using simple linear algebra. I will
+also comment on the backpropagation algorithm which provides a way to estimate the
+parameters of a network using data. For a detailed description of neural networks and
+the backpropagation algorithm see \cite{Goodfellow.2016, Murphy.2012, Hastie.2008}.
+
 Another popular regression method now mainly developed in the machine learning
 literature are \emph{feed-forward} neural networks. The approximation quality of neural
 networks has been studied extensively in the literature. Several so called universal
@@ -17,7 +45,7 @@ also comment on the backpropagation algorithm which provides a way to estimate t
 parameters of a network using data. For a detailed description of neural networks and
 the backpropagation algorithm see \cite{Goodfellow.2016, Murphy.2012, Hastie.2008}.
 
-\subparagraph{General Notion}
+\paragraph{General Notion}
 
 To understand how a statistical / machine learning method works one has to understand at
 least two separate parts. First, given a fixed set of parameters how does the method
@@ -27,9 +55,9 @@ be estimated using ordinary least squares but also through regularized approache
 better understand how neural networks work let us ignore the estimation component for
 now.
 
-\begin{figure}
+\begin{figure}[!ht]
 \centering
-\begin{tikzpicture}[shorten >=1pt,->,draw=black!60, node distance=\layersep, scale=1.5]
+\begin{tikzpicture}[shorten >=1pt,->,draw=black!60, node distance=\layersep, scale=1.2]
 
     \tikzstyle{every pin edge}=[<-,shorten <=1pt]
     \tikzstyle{neuron}=[circle, draw=black!80, minimum size=17pt,inner sep=0pt]
