@@ -11,13 +11,14 @@ from nnet.config import BLD
 from nnet.config import NUM_CLASSES
 
 
-def get_batch(batch_id, data, *, batch_size):
+def get_batch(batch_id, data, *, batch_size, problem):
     """Extract a batch from data.
 
     Args:
         batch_id (int): The batch id.
         data (Data): The data container.
         batch_size (int): Size of each batch.
+        problem (str): 'regression' or 'classification'.
 
     Returns:
         tuple: (images, labels)
@@ -25,7 +26,10 @@ def get_batch(batch_id, data, *, batch_size):
     """
     _from = batch_id * batch_size
     _to = (batch_id + 1) * batch_size
-    return data.images[_from:_to], data.onehot[_from:_to]
+    if problem == "regression":
+        return data.images[_from:_to], data.labels[_from:_to]
+    else:
+        return data.images[_from:_to], data.onehot[_from:_to]
 
 
 def get_mnist_data(path=None):

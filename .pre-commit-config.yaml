@@ -73,7 +73,7 @@ repos:
     rev: v2.1.0
     hooks:
     -   id: codespell
-        args: [--skip, "*.html"]
+        args: [--skip, "*.html,*ipynb"]
 -   repo: https://github.com/executablebooks/mdformat
     rev: 0.7.14
     hooks:
