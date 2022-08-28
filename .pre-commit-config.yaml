@@ -12,8 +12,6 @@ repos:
     -   id: end-of-file-fixer
     -   id: fix-byte-order-marker
     -   id: mixed-line-ending
-      #     -   id: no-commit-to-branch
-      #         args: [--branch, main]
     -   id: trailing-whitespace
 -   repo: https://github.com/pre-commit/pygrep-hooks
     rev: v1.9.0
@@ -65,16 +63,11 @@ repos:
     rev: v1.0.1
     hooks:
     -   id: tryceratops
-      # -   repo: https://github.com/econchick/interrogate
-      #     rev: 1.5.0
-      #     hooks:
-      #     -   id: interrogate
-      #         args: [-v, --fail-under=40]
-      # -   repo: https://github.com/codespell-project/codespell
-      #     rev: v2.1.0
-      #     hooks:
-      #     -   id: codespell
-      #         args: ["--skip=*.html,paper/"]
+-   repo: https://github.com/codespell-project/codespell
+    rev: v2.1.0
+    hooks:
+    -   id: codespell
+        args: [--skip, "*.html,*ipynb,paper/"]
 -   repo: https://github.com/executablebooks/mdformat
     rev: 0.7.14
     hooks:
@@ -102,6 +95,4 @@ repos:
         #     )$
 -   repo: meta
     hooks:
-        # -   id: check-hooks-apply
     -   id: check-useless-excludes
-    # -   id: identity  # Prints all files passed to pre-commits. Debugging.

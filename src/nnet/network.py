@@ -28,32 +28,55 @@ def build_network(
     loss_type,
     activation_type,
     algorithm,
+    problem,
     tqdm=tqdm,
     step_size=0.01,
     key=None,
 ):
+    ####################################################################################
+    # validate input
+    ####################################################################################
+
+    if problem not in {"regression", "classification"}:
+        msg = "problem needs to be in {'regression', 'classification'}."
+        raise ValueError(msg)
+
+    # assert that problem and structure match
+    if structure[-1] > 1 and problem == "regression":
+        msg = "If problem = regression then the last layer needs to be of size 1."
+        raise ValueError(msg)
+    if structure[-1] == 1 and problem == "classification":
+        msg = (
+            "If problem = classification then the last layer needs to have at "
+            "least size 2."
+        )
+        raise ValueError(msg)
 
     # random number generator key
     if key is None:
         key = jax.random.PRNGKey(1)
 
+    ####################################################################################
+    # build network
+    ####################################################################################
+
     # define layer structure
     layer = get_layer(activation_type)
 
     # get forward pass / predict function
-    forward_pass = get_forward_pass_func(layer)
+    forward_pass = get_forward_pass_func(layer, problem)
 
     # get loss function
-    loss_func = get_loss_func(forward_pass=forward_pass, loss_type=loss_type)
+    loss_func = get_loss_func(forward_pass, loss_type=loss_type)
 
     # get accuracy function
-    compute_accuracy = get_accuracy_func(forward_pass)
+    compute_accuracy = get_accuracy_func(forward_pass, problem=problem)
 
     # initialize start parameters
     start_params = get_start_params(structure, key=key)
 
     # get optimizer triplet
-    optimizer = get_optimizer(algorithm=algorithm, step_size=step_size)
+    optimizer = get_optimizer(algorithm, step_size=step_size)
     opt_init, opt_update, get_params = optimizer()
 
     # get update step
@@ -66,11 +89,16 @@ def build_network(
         start_params=start_params,
         get_params=get_params,
         opt_init=opt_init,
+        problem=problem,
         tqdm=tqdm,
     )
 
     # get predict function
-    predict = get_predict_func(forward_pass)
+    predict = get_predict_func(forward_pass, problem)
+
+    ####################################################################################
+    # construct output
+    ####################################################################################
 
     network = Network(
         fit=fit,
@@ -79,11 +107,25 @@ def build_network(
     return network
 
 
-def get_predict_func(forward_pass):
+def get_predict_func(forward_pass, problem):
+
+    if problem == "regression":
+
+        @jit
+        def _transform(x):
+            return x
+
+    else:
+
+        @jit
+        def _transform(probabilities):
+            return probabilities.argmax(axis=1)
+
+    @jit
     def _predict(params, images):
 
         predictions = forward_pass(params, images)
-        predictions = predictions.argmax(axis=1)
+        predictions = _transform(predictions)
 
         return predictions
 
@@ -96,6 +138,7 @@ def get_fitting_function(
     start_params,
     get_params,
     opt_init,
+    problem,
     *,
     tqdm=tqdm,
 ):
@@ -167,7 +210,7 @@ def get_fitting_function(
             for batch_id in batch_iterator(epoch_id):
 
                 batch_image, batch_onehot = get_batch(
-                    batch_id, data.train, batch_size=batch_size
+                    batch_id, data.train, batch_size=batch_size, problem=problem
                 )
 
                 params, opt_state, _loss = update_params(
@@ -224,14 +267,24 @@ def get_update_func(get_params, opt_update, loss_func):
     return _update_params
 
 
-def get_accuracy_func(forward_pass):
+def get_accuracy_func(forward_pass, problem):
+    @jit
+    def _share_correct_labels(_softmax, labels):
+        predicted = jnp.argmax(_softmax, axis=1)
+        _accuracy = jnp.mean(predicted == labels)
+        return _accuracy
+
+    ACCURACY_MEASURES = {  # noqa: N806
+        "regression": _mean_square,
+        "classification": _share_correct_labels,
+    }
+
+    _accuracy_measure = ACCURACY_MEASURES[problem]
+
     def _compute_accuracy(params, data, network_output=None):
         if network_output is None:
             network_output = forward_pass(params, data.images)
-
-        predicted = jnp.argmax(network_output, axis=1)
-
-        _accuracy = jnp.mean(predicted == data.labels)
+        _accuracy = _accuracy_measure(network_output, data.labels)
         return _accuracy
 
     return _compute_accuracy
@@ -254,7 +307,15 @@ def get_loss_func(forward_pass, loss_type):
     return _loss_func
 
 
-def get_forward_pass_func(layer):
+def get_forward_pass_func(layer, problem):
+    @jit
+    def identity(logits):
+        return logits
+
+    LAST_TRANSFORM = {"regression": identity, "classification": softmax}  # noqa: N806
+
+    _last_transform = LAST_TRANSFORM[problem]
+
     @jit
     def _forward_pass(params, activations):
         # loop over hidden layers
@@ -264,7 +325,7 @@ def get_forward_pass_func(layer):
         # transform last layer
         last_w, last_b = params[-1]
         logits = jnp.dot(last_w, activations) + last_b
-        output = softmax(logits)
+        output = _last_transform(logits)
         return output
 
     return vmap(_forward_pass, in_axes=(None, 0), out_axes=0)

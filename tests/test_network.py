@@ -28,7 +28,7 @@ def test_cross_entropy():
 
 @pytest.mark.end_to_end
 def test_classification_problem():
-    """Test that accuracy of a simple network is higher than 98% on a simple problem."""
+    """Test that accuracy of a simple network is higher than 96% on a simple problem."""
     x, y = make_classification(
         n_samples=50_000, n_features=10, n_informative=3, n_classes=2, class_sep=2
     )
@@ -47,6 +47,7 @@ def test_classification_problem():
         loss_type="cross_entropy",
         activation_type="sigmoid",
         algorithm="adam",
+        problem="classification",
         step_size=0.001,
     )
 
