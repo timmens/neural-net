@@ -16,6 +16,7 @@ paper/*.out
 paper/*.synctex.gz
 paper/*.bst
 paper/*.toc
+paper/*.synctex(busy)
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
