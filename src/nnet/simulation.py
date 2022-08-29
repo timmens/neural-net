@@ -26,7 +26,7 @@ SIMULATION_SPEC = {
     },
 }
 
-N_SIMULATIONS = 2  # 100
+N_SIMULATIONS = 50
 
 N_TEST_SAMPLES = 10_000
 
@@ -42,14 +42,16 @@ COMBINATIONS = []
 for name, specs in SIMULATION_SPEC.items():
     for n_samples in N_SAMPLES_GRID:
         for fitter in specs["fitter"]:
-            _id = f"{name}-{n_samples}-{fitter}"
-            comb = {
-                "name": name,
-                "n_samples": n_samples,
-                "fitter": fitter,
-                "_id": _id,
-            }
-            COMBINATIONS.append(comb)
+            for iteration in range(N_SIMULATIONS):
+                _id = f"{name}-{n_samples}-{fitter}-{iteration}"
+                comb = {
+                    "name": name,
+                    "n_samples": n_samples,
+                    "fitter": fitter,
+                    "iteration": iteration,
+                    "_id": _id,
+                }
+                COMBINATIONS.append(comb)
 
 
 def get_data_kwargs(n_samples, _type):
@@ -108,16 +110,14 @@ FITTER = {
 INDEX = ["name", "fitter", "n_samples", "iteration"]
 
 
-def simulation_task(fitter, n_samples, name):
+def simulation_task(iteration, fitter, n_samples, name):
     index = ["name", "fitter", "n_samples", "iteration"]
     result = pd.DataFrame(columns=index).set_index(index)
 
     data_kwargs = get_data_kwargs(n_samples, name)
 
-    for iteration in range(N_SIMULATIONS):
-
-        mse = simulation_iteration(iteration, fitter, data_kwargs, N_TEST_SAMPLES)
-        result.loc[(name, fitter, n_samples, iteration), "mse"] = mse
+    mse = simulation_iteration(iteration, fitter, data_kwargs, N_TEST_SAMPLES)
+    result.loc[(name, fitter, n_samples, iteration), "mse"] = mse
 
     return result
 
