@@ -16,7 +16,7 @@ from sklearn.neural_network import MLPRegressor
 
 SIMULATION_SPEC = {
     "linear": {
-        "fitter": ("ols", "nnet"),
+        "fitter": ("ols", "nnet", "boosting"),
     },
     "linear_sparse": {
         "fitter": ("ols", "lasso", "nnet", "nnet_regularized"),
@@ -30,7 +30,9 @@ N_SIMULATIONS = 2  # 100
 
 N_TEST_SAMPLES = 10_000
 
-N_SAMPLES = [100, 1_000, 10_000]
+N_SAMPLES_GRID = [100, 1_000, 10_000]
+
+ALPHAS = [0.001, 0.01, 0.1]
 
 # ======================================================================================
 # Create Simulation Combinations
@@ -38,20 +40,19 @@ N_SAMPLES = [100, 1_000, 10_000]
 
 COMBINATIONS = []
 for name, specs in SIMULATION_SPEC.items():
-    for n_samples in N_SAMPLES:
+    for n_samples in N_SAMPLES_GRID:
         for fitter in specs["fitter"]:
             _id = f"{name}-{n_samples}-{fitter}"
-            COMBINATIONS.append(
-                {
-                    "name": name,
-                    "n_samples": n_samples,
-                    "fitter": fitter,
-                    "_id": _id,
-                }
-            )
+            comb = {
+                "name": name,
+                "n_samples": n_samples,
+                "fitter": fitter,
+                "_id": _id,
+            }
+            COMBINATIONS.append(comb)
 
 
-def get_data_simulation_kwargs(n_samples, _type):
+def get_data_kwargs(n_samples, _type):
     if "sparse" in _type:
         kwargs = {
             "n_samples": n_samples,
@@ -70,9 +71,6 @@ def get_data_simulation_kwargs(n_samples, _type):
             "nonlinear": False,
         }
     return kwargs
-
-
-ALPHAS = [0.001, 0.01, 0.1]
 
 
 FITTER = {
@@ -114,7 +112,7 @@ def simulation_task(fitter, n_samples, name):
     index = ["name", "fitter", "n_samples", "iteration"]
     result = pd.DataFrame(columns=index).set_index(index)
 
-    data_kwargs = get_data_simulation_kwargs(n_samples, name)
+    data_kwargs = get_data_kwargs(n_samples, name)
 
     for iteration in range(N_SIMULATIONS):
 
@@ -126,7 +124,8 @@ def simulation_task(fitter, n_samples, name):
 
 def simulation(
     n_simulations=1_000,
-    *simulation_types,
+    *,
+    simulation_types,
     n_samples_grid,
     n_test_samples,
     aggregation_methods,
@@ -142,7 +141,7 @@ def simulation(
             # ==========================================================================
             # Simulate testing data (used to approximate integral)
 
-            data_kwargs = get_data_simulation_kwargs(n_samples, _type)
+            data_kwargs = get_data_kwargs(n_samples, _type)
 
             X_test, y_test = simulate_data(
                 **{**data_kwargs, **{"n_samples": n_test_samples}},

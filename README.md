@@ -5,34 +5,38 @@
 [![pre-commit.ci status](https://results.pre-commit.ci/badge/github/timmens/neural-net/main.svg)](https://results.pre-commit.ci/latest/github/timmens/neural-net/main)
 [![image](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-This project contains an implementation of a vanilla MLP neural network using JAX. The
-network is trained on the MNIST data set to recognize hand-written digits. It also
-contains two presentations on the theoretical and practical side of neural networks.
-
 ### Topics in Econometrics and Statistics
 
 > Summer 2022, Tim Mensinger
 
+This repository contains (source) material for
+
+1. A custom implementation of a vanilla MLP neural network using JAX. The network is
+   trained on the MNIST data set to recognize hand-written digits.
+1. Two presentations on the theoretical and practical side of neural networks. The
+   theoretical version was presented in class.
+1. A term paper that analyzes neural networks from an econometric perspective.
+
+## Paper
+
+The tex-files are stored in the folder `[root]/paper` and compiled using (a relatively
+fresh install of) latex.
+
+- [🗎 Paper](<>)
+
 ## Presentation
 
-There is a *theoretical* and a *practical* presentation. You can view them online by
-clicking on the respective document icon:
+There is a *theoretical* and a *practical* presentation. You can view them here
 
-|             |                                                                                                                  |
-| ----------- | ---------------------------------------------------------------------------------------------------------------- |
-| Theoretical | [🗎](http://htmlpreview.github.io/?https://github.com/timmens/neural-net/blob/main/presentation/theoretical.html) |
-| Practical   | [🗎](http://htmlpreview.github.io/?https://github.com/timmens/neural-net/blob/main/presentation/practical.html)   |
+- [🗎 Theoretical](http://htmlpreview.github.io/?https://github.com/timmens/neural-net/blob/main/presentation/theoretical.html)
+- [🗎 Practical](http://htmlpreview.github.io/?https://github.com/timmens/neural-net/blob/main/presentation/practical.html)
 
-I use [marp](https://marp.app/) to convert my markdown files to html presentations. To
-get a pdf version simply call
+The source code is stored in the folder `[root]/presentation` and rendered using
+[marp](https://marp.app/).
 
-```bash
-$ decktape generic -s 1280x720 --load-pause 3000 file.html file.pdf
-```
+## Code
 
-## Usage of the code
-
-> **Warning** Jax is not supported on windows.
+### Installation
 
 To get started, create and activate the environment with
 
@@ -49,6 +53,12 @@ functions defined in the repository as
 from nnet.network import build_network
 from nnet.plotting import plot_examples
 ```
+
+### Reproduce Paper
+
+### Custom Neural Network Implementation
+
+> **Warning** Jax is not supported on windows.
 
 or you run the notebook locally ---or view it on
 [nbviewer](https://nbviewer.org/github/timmens/neural-net/blob/main/src/nnet/neural_network.ipynb).
