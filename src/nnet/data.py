@@ -59,11 +59,8 @@ def simulate_data(
         n_informative = int(np.floor(0.1 * n_features))
 
     X = rng.normal(size=(n_samples, n_features))
-
     X_informative = X[:, :n_informative]
-
     noise = rng.normal(size=n_samples, scale=noise)
-
     coef = simulate_coefficients(n_params=n_informative)
 
     if nonlinear:

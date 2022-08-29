@@ -10,6 +10,47 @@ from sklearn.metrics import mean_squared_error
 from sklearn.neural_network import MLPRegressor
 
 
+# ======================================================================================
+# Simulation specification
+# ======================================================================================
+
+SIMULATION_SPEC = {
+    "linear": {
+        "fitter": ("ols", "nnet"),
+    },
+    "linear_sparse": {
+        "fitter": ("ols", "lasso", "nnet", "nnet_regularized"),
+    },
+    "nonlinear_sparse": {
+        "fitter": ("ols", "nnet", "nnet_regularized", "boosting"),
+    },
+}
+
+N_SIMULATIONS = 2  # 100
+
+N_TEST_SAMPLES = 10_000
+
+N_SAMPLES = [100, 1_000, 10_000]
+
+# ======================================================================================
+# Create Simulation Combinations
+# ======================================================================================
+
+COMBINATIONS = []
+for name, specs in SIMULATION_SPEC.items():
+    for n_samples in N_SAMPLES:
+        for fitter in specs["fitter"]:
+            _id = f"{name}-{n_samples}-{fitter}"
+            COMBINATIONS.append(
+                {
+                    "name": name,
+                    "n_samples": n_samples,
+                    "fitter": fitter,
+                    "_id": _id,
+                }
+            )
+
+
 def get_data_simulation_kwargs(n_samples, _type):
     if "sparse" in _type:
         kwargs = {
@@ -64,6 +105,23 @@ FITTER = {
 # ======================================================================================
 # Simulation function
 # ======================================================================================
+
+
+INDEX = ["name", "fitter", "n_samples", "iteration"]
+
+
+def simulation_task(fitter, n_samples, name):
+    index = ["name", "fitter", "n_samples", "iteration"]
+    result = pd.DataFrame(columns=index).set_index(index)
+
+    data_kwargs = get_data_simulation_kwargs(n_samples, name)
+
+    for iteration in range(N_SIMULATIONS):
+
+        mse = simulation_iteration(iteration, fitter, data_kwargs, N_TEST_SAMPLES)
+        result.loc[(name, fitter, n_samples, iteration), "mse"] = mse
+
+    return result
 
 
 def simulation(
@@ -134,3 +192,14 @@ def simulation_iteration(iteration, fitter, data_kwargs, n_test_samples):
     # Compute metrics (here: mean squared error)
     loss = mean_squared_error(y_test, y_pred)
     return loss
+
+
+# ======================================================================================
+# Combine Simulation Results
+# ======================================================================================
+
+
+def combine_task(paths):
+    dfs = [pd.read_csv(path, index_col=INDEX) for path in paths]
+    df = pd.concat(dfs).sort_index()
+    return df

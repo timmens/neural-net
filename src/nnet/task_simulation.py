@@ -1,64 +1,38 @@
-import pandas as pd
 import pytask
 from nnet.config import BLD
-from nnet.simulation import get_data_simulation_kwargs
-from nnet.simulation import simulation_iteration
+from nnet.simulation import COMBINATIONS
+from nnet.simulation import combine_task
+from nnet.simulation import simulation_task
 
 
 # ======================================================================================
-# Simulation specification
+# Run Simulation
 # ======================================================================================
 
-SIMULATION_SPEC = {
-    "linear": {
-        "fitter": ("ols", "nnet"),
-    },
-    "linear_sparse": {
-        "fitter": ("ols", "lasso", "nnet", "nnet_regularized"),
-    },
-    "nonlinear_sparse": {
-        "fitter": ("ols", "nnet", "nnet_regularized", "boosting"),
-    },
-}
+for comb in COMBINATIONS:
 
-N_SIMULATIONS = 2  # 100
+    task_kwargs = {
+        "fitter": comb["fitter"],
+        "n_samples": comb["n_samples"],
+        "name": comb["name"],
+        "produces": BLD.joinpath("simulation", f"{comb['_id']}.csv"),
+    }
 
-N_TEST_SAMPLES = 10_000
+    @pytask.mark.task(id=comb["_id"], kwargs=task_kwargs)
+    def task_simulation(fitter, n_samples, name, produces):
+        result = simulation_task(fitter, n_samples, name)
+        result.to_csv(produces)
 
-N_SAMPLES = [100, 1_000]  # ,10_000]
 
 # ======================================================================================
-# Simulation
+# Combine Simulations
 # ======================================================================================
 
-for name, specs in SIMULATION_SPEC.items():
 
-    for n_samples in N_SAMPLES:
-
-        for fitter in specs["fitter"]:
-
-            _id = f"{name}-{n_samples}-{fitter}"
-
-            task_kwargs = {
-                "fitter": fitter,
-                "n_samples": n_samples,
-                "name": name,
-                "produces": BLD.joinpath("simulation", f"{_id}.csv"),
-            }
-
-            @pytask.mark.task(id=_id, kwargs=task_kwargs)
-            def task_simulation(fitter, n_samples, name, produces):
-
-                index = ["name", "fitter", "n_samples", "iteration"]
-                result = pd.DataFrame(columns=index).set_index(index)
-
-                data_kwargs = get_data_simulation_kwargs(n_samples, name)
-
-                for iteration in range(N_SIMULATIONS):
-
-                    mse = simulation_iteration(
-                        iteration, fitter, data_kwargs, N_TEST_SAMPLES
-                    )
-                    result.loc[(name, fitter, n_samples, iteration), "mse"] = mse
-
-                result.to_csv(produces)
+@pytask.mark.depends_on(
+    [BLD.joinpath("simulation", f"{comb['_id']}.csv") for comb in COMBINATIONS]
+)
+@pytask.mark.produces(BLD.joinpath("simulation", "result.csv"))
+def task_combine(depends_on, produces):
+    df = combine_task(depends_on.values())
+    df.to_csv(produces)
