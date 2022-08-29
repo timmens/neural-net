@@ -20,9 +20,13 @@ This repository contains (source) material for
 ## Paper
 
 The tex-files are stored in the folder `[root]/paper` and compiled using (a relatively
-fresh install of) latex.
+fresh install of) latex. You can view it here
 
-- [🗎 Paper](<>)
+- [🗎 Paper](https://github.com/timmens/neural-net/blob/main/paper/main.pdf)
+
+The results in the paper (tables and figures) are generated in a reproducible fashion
+using [pytask](www.github.com/pytask-dev). The build process is described below in the
+section Code.
 
 ## Presentation
 
@@ -38,7 +42,7 @@ The source code is stored in the folder `[root]/presentation` and rendered using
 
 ### Installation
 
-To get started, create and activate the environment with
+To get started, create and activate the (conda) environment using
 
 ```bash
 $ cd 'into project root'
@@ -56,12 +60,33 @@ from nnet.plotting import plot_examples
 
 ### Reproduce Paper
 
+To reproduce the results from the paper (tables and figures) you only have to call
+pytask in an active environment
+
+```bash
+$ cd 'into project root'
+$ conda activate nnet
+$ pytask
+```
+
+This creates a folder `[root]/bld` which contains all tables and figures used in the
+paper in the subfolder `paper`.
+
 ### Custom Neural Network Implementation
+
+For this project I implemented a multilayer-perceptron neural network and its fitting
+procedure using Jax. The code is found in the module `[root]/src/nnet/network.py`. It
+works in both regression and classification settings and is tested on the MNIST dataset
+that contains hand-written digits.
 
 > **Warning** Jax is not supported on windows.
 
-or you run the notebook locally ---or view it on
+If you want to run my custom implementation locally I suggest running the notebook
+[`[root]/src/nnet/neural_network.ipynb`](https://github.com/timmens/neural-net/blob/main/src/nnet/neural_network.ipynb)
+---or simply view it on
 [nbviewer](https://nbviewer.org/github/timmens/neural-net/blob/main/src/nnet/neural_network.ipynb).
+
+______________________________________________________________________
 
 ## Credits
 
