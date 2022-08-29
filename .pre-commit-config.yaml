@@ -59,6 +59,7 @@ repos:
             pydocstyle,
             Pygments,
         ]
+        args: [--ignore, "N806"]
 -   repo: https://github.com/guilatrova/tryceratops
     rev: v1.0.1
     hooks:

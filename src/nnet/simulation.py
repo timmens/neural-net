@@ -1,7 +1,8 @@
 import numpy as np
 import pandas as pd
+from catboost import CatBoostRegressor
 from nnet.data import simulate_data
-from sklearn.ensemble import GradientBoostingRegressor
+from nnet.network import CustomMLP
 from sklearn.linear_model import LassoCV
 from sklearn.linear_model import LinearRegression
 from sklearn.linear_model import RidgeCV
@@ -9,50 +10,68 @@ from sklearn.metrics import mean_squared_error
 from sklearn.neural_network import MLPRegressor
 
 
-# ======================================================================================
-# Implemented fitting methods and simulation types
-# ======================================================================================
+def get_data_simulation_kwargs(n_samples, _type):
+    if "sparse" in _type:
+        kwargs = {
+            "n_samples": n_samples,
+            "n_features": int(np.floor(0.1 * n_samples)),
+            "n_informative": int(np.floor(0.01 * n_samples)),
+            "noise": 0.5,
+        }
+        if "nonlinear" in _type:
+            kwargs["nonlinear"] = True
+    else:
+        kwargs = {
+            "n_samples": n_samples,
+            "n_features": 30,
+            "n_informative": 30,
+            "noise": 0.5,
+            "nonlinear": False,
+        }
+    return kwargs
 
-SIMULATION_TYPES = {
-    "linear": {
-        "fitter": ("ols", "nnet"),
-    },
-    "linear_sparse": {
-        "fitter": ("ridge", "lasso", "nnet", "nnet_regularized"),
-    },
-    "nonlinear_sparse": {
-        "fitter": ("ridge", "lasso", "nnet_regularized", "boosting"),
-    },
-}
 
-N_SAMPLES_GRID = [100, 500, 1_000, 10_000]
+ALPHAS = [0.001, 0.01, 0.1]
+
 
 FITTER = {
     # "method": (class, kwargs)
-    "ols": (LinearRegression, {"fit_intercept": False}),
-    "ridge": (RidgeCV, {"fit_intercept": False}),
-    "lasso": (LassoCV, {"fit_intercept": False}),
-    "nnet": (
+    "ols": (LinearRegression, {"fit_intercept": False, "copy_X": False}),
+    "ridge": (RidgeCV, {"fit_intercept": False, "cv": 3, "alphas": ALPHAS}),
+    "lasso": (
+        LassoCV,
+        {"fit_intercept": False, "cv": 3, "n_jobs": -1, "alphas": ALPHAS},
+    ),
+    "nnet": (CustomMLP, {"n_epochs": 100, "sparsity_level": 0.01}),
+    "nnet_regularized": (
+        CustomMLP,
+        {"n_epochs": 100, "sparsity_level": 0.01, "l1_penalty": 0.05},
+    ),
+    "nnet_sklearn": (
         MLPRegressor,
         {"activation": "relu", "solver": "adam", "alpha": 0.0, "max_iter": 300},
     ),
-    "nnet_regularized": (
+    "nnet_sklearn_regularized": (
         MLPRegressor,
         {"activation": "relu", "solver": "adam", "alpha": 0.01, "max_iter": 300},
     ),
-    "boosting": (GradientBoostingRegressor, {}),
+    "boosting": (
+        CatBoostRegressor,
+        {"iterations": 1_000, "depth": 2, "rsm": 0.2, "silent": True},
+    ),
 }
 
 # ======================================================================================
-# Monte Carlo simulation function
+# Simulation function
 # ======================================================================================
 
 
 def simulation(
     n_simulations=1_000,
-    simulation_types=SIMULATION_TYPES,
-    n_samples_grid=N_SAMPLES_GRID,
-    n_test_samples=10_000,
+    *simulation_types,
+    n_samples_grid,
+    n_test_samples,
+    aggregation_methods,
 ):
 
     index = ["type", "fitter", "n_samples"]
@@ -60,64 +79,58 @@ def simulation(
 
     for _type, specs in simulation_types.items():
 
-        if _type != "linear_sparse":
-            continue
-
         for n_samples in n_samples_grid:
 
-            kwargs = _get_data_simulation_kwargs(n_samples, _type)
+            # ==========================================================================
+            # Simulate testing data (used to approximate integral)
+
+            data_kwargs = get_data_simulation_kwargs(n_samples, _type)
 
             X_test, y_test = simulate_data(
-                **{**kwargs, **{"n_samples": n_test_samples}},
+                **{**data_kwargs, **{"n_samples": n_test_samples}},
                 seed=np.max(n_samples_grid) + n_samples,
             )
 
-            losses = {fitter: [] for fitter in specs["fitter"]}
+            # ==========================================================================
+            # Loop over fitting methods and Monte Carlo iterations
 
-            for iteration in range(n_simulations):
+            for fitter in specs["fitter"]:
 
-                X_train, y_train, coef = simulate_data(
-                    **kwargs, seed=iteration, return_coef=True
-                )
+                loss = []
 
-                for fitter in specs["fitter"]:
+                for iteration in range(n_simulations):
 
-                    model, model_kwargs = FITTER[fitter]
-                    model = model(**model_kwargs).fit(X_train, y_train)
+                    _loss = simulation_iteration(
+                        iteration, fitter, data_kwargs, X_test, y_test
+                    )
+                    loss.append(_loss)
 
-                    y_pred = model.predict(X_test)
-
-                    _loss = mean_squared_error(y_test, y_pred)
-
-                    losses[fitter].append(_loss)
-
-            loss = {fitter: np.mean(_losses) for fitter, _losses in losses.items()}
-
-            for fitter, loss in loss.items():
-                result.loc[(_type, fitter, n_samples), "mean_mean_squared_error"] = loss
+                # Compute aggregation metrics
+                for name, method in aggregation_methods.items():
+                    result.loc[(_type, fitter, n_samples), f"{name}_mse"] = method(loss)
 
     result = result.sort_index()
     return result
 
 
-def _get_data_simulation_kwargs(n_samples, _type):
-    if _type == "linear":
-        kwargs = {
-            "n_samples": n_samples,
-            "n_features": 30,
-            "n_informative": 30,
-            "noise": 0.5,
-        }
-    else:
-        kwargs = {
-            "n_samples": n_samples,
-            "n_features": int(np.floor(0.1 * n_samples)),
-            "n_informative": int(np.floor(0.01 * n_samples)),
-            "noise": 0.5,
-            "nonlinear": False,
-        }
+def simulation_iteration(iteration, fitter, data_kwargs, n_test_samples):
+    # Simulate testing data
+    test_data_kwargs = {**data_kwargs, **{"n_samples": n_test_samples}}
+    X_test, y_test = simulate_data(
+        **test_data_kwargs,
+        seed=20_000,
+    )
 
-    if _type == "nonlinear":
-        kwargs["nonlinear"] = True
+    # Simulate training data
+    X_train, y_train = simulate_data(**data_kwargs, seed=iteration)
 
-    return kwargs
+    # Get fitting method (model) and train
+    model, model_kwargs = FITTER[fitter]
+    model = model(**model_kwargs).fit(X_train, y_train)
+
+    # Predict on testing data
+    y_pred = model.predict(X_test)
+
+    # Compute metrics (here: mean squared error)
+    loss = mean_squared_error(y_test, y_pred)
+    return loss

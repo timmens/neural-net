@@ -8,6 +8,7 @@ from typing import Union
 
 import jax
 import jax.numpy as jnp
+import numpy as np
 from jax import jit
 from jax import value_and_grad
 from jax import vmap
@@ -18,8 +19,99 @@ from jax.nn import relu
 from jax.nn import sigmoid
 from jax.nn import softmax
 from jaxlib.xla_extension import DeviceArray
+from keras import regularizers
+from keras import Sequential
+from keras.layers import Dense
+from keras.wrappers.scikit_learn import KerasRegressor
 from nnet.data import get_batch
 from tqdm import tqdm
+
+
+# ======================================================================================
+# Custom neural network class using Keras backend
+# ======================================================================================
+
+
+@dataclass
+class CustomMLP:
+
+    n_epochs: int = 100
+    l1_penalty: float = 0.0
+    layers: List[int] = None
+    sparsity_level: float = None
+    model: KerasRegressor = None
+
+    def fit(self, x, y):
+
+        n_samples, input_dim = x.shape
+
+        layers = self.layers
+        if layers is None:
+            if self.sparsity_level is None:
+                layers = [input_dim // 2, input_dim // 4]
+            else:
+                sl = self.sparsity_level
+                n_nodes = np.maximum(input_dim * sl, 2)
+                layers = [n_nodes] * 5
+
+        build_fn = _get_build_fn(input_dim, layers, self.l1_penalty)
+
+        batch_size = np.minimum(100, n_samples // 10)
+
+        model = KerasRegressor(
+            build_fn=build_fn, batch_size=batch_size, epochs=self.n_epochs
+        )
+        model.fit(x, y, verbose=0)
+
+        self.model = model
+        return self
+
+    def predict(self, x):
+        return self.model.predict(x)
+
+
+def _get_build_fn(input_dim, layers, l1_penalty=None):
+    """Create a function to build a neural network regressor.
+
+    Args:
+        input_dim (int): Number of features.
+        layers (list): Number of nodes per layer. len(layers) defines number of hidden
+            layers.
+        l1_penalty (float): l1 penalty for kernel weights.
+
+    Returns:
+        build_fn (function): Function to build a neural net regressor.
+
+    """
+    if l1_penalty is None:
+        kernel_regularizer = None
+    else:
+        kernel_regularizer = regularizers.L1(l1_penalty)
+
+    def build_fn():
+        regressor = Sequential()
+        regressor.add(
+            Dense(
+                units=layers[0],
+                activation="relu",
+                input_dim=input_dim,
+                kernel_regularizer=kernel_regularizer,
+            )
+        )
+        for u in layers[1:]:
+            regressor.add(Dense(units=u, activation="relu"))
+        regressor.add(
+            Dense(units=1, activation="linear", kernel_regularizer=kernel_regularizer)
+        )
+        regressor.compile(optimizer="adam", loss="mean_squared_error")
+        return regressor
+
+    return build_fn
+
+
+# ======================================================================================
+# Own neural network implementation using JAX
+# ======================================================================================
 
 
 def build_network(
@@ -33,9 +125,9 @@ def build_network(
     step_size=0.01,
     key=None,
 ):
-    ####################################################################################
+    # ==================================================================================
     # validate input
-    ####################################################################################
+    # ==================================================================================
 
     if problem not in {"regression", "classification"}:
         msg = "problem needs to be in {'regression', 'classification'}."
@@ -56,9 +148,9 @@ def build_network(
     if key is None:
         key = jax.random.PRNGKey(1)
 
-    ####################################################################################
+    # ==================================================================================
     # build network
-    ####################################################################################
+    # ==================================================================================
 
     # define layer structure
     layer = get_layer(activation_type)
@@ -96,9 +188,9 @@ def build_network(
     # get predict function
     predict = get_predict_func(forward_pass, problem)
 
-    ####################################################################################
+    # ==================================================================================
     # construct output
-    ####################################################################################
+    # ==================================================================================
 
     network = Network(
         fit=fit,
@@ -162,9 +254,9 @@ def get_fitting_function(
         """
         opt_state = opt_init(start_params)
 
-        ################################################################################
+        # ==============================================================================
         # initialize logging, parameters and batching
-        ################################################################################
+        # ==============================================================================
 
         log = Logging()
 
@@ -172,9 +264,9 @@ def get_fitting_function(
 
         n_batches = len(data.train.labels) // batch_size
 
-        ################################################################################
+        # ==============================================================================
         # create training iterators that show progress
-        ################################################################################
+        # ==============================================================================
 
         if show_progress:
             epoch_iterator = tqdm(
@@ -192,18 +284,18 @@ def get_fitting_function(
             def batch_iterator(epoch_id):  # noqa: U100
                 return range(n_batches)
 
-        ################################################################################
+        # ==============================================================================
         # log starting accuracy
-        ################################################################################
+        # ==============================================================================
 
         train_acc = compute_accuracy(params, data.train)
         test_acc = compute_accuracy(params, data.test)
 
         log.add_accuracy(train_acc, test_acc)
 
-        ################################################################################
+        # ==============================================================================
         # training loop
-        ################################################################################
+        # ==============================================================================
 
         for epoch_id in epoch_iterator:
 
@@ -228,9 +320,9 @@ def get_fitting_function(
             if jnp.abs(log.train[-1] - log.train[-2]) < tol:
                 break
 
-        ################################################################################
+        # ==============================================================================
         # prepare output
-        ################################################################################
+        # ==============================================================================
 
         log.histories_asarray()
 
