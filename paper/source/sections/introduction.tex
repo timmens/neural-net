@@ -312,25 +312,7 @@ Using again that $\sigma$ can be applied element-wise we get
     \end{itemize}
 \end{remark}
 
-
-\subparagraph{Backpropagation.}
-To apply a neural net to a real world problem we have to calibrate the weights ($w^*,
-W_1, W_2$ in the above problem) using real data. This can be done using the gradient
-descent algorithm, where the \emph{backpropagation} technique is used to compute the
-gradients. Denote all parameters in the neural network by $w$, then given an initial
-guess $w_0$ gradient descent updates the parameter using the rule
-\begin{align*}
-    w_{t+1} \leftarrow w_t - \nu \sum_{i=1}^B \left.\frac{\partial L\left(y_i, g(x_i;
-        w)\right)}{\partial w} \right\vert_{w = w_t} \,,
-\end{align*}
-where $L$ again denotes some differentiable loss function and $0 < \nu < 1$ a learning
-parameter (compare this to \ref{eq:gradient_tree_learning}).  Without the ability to
-efficiently compute the gradient $\partial L / \partial w$ gradient descent would not be
-feasible. For a detailed explanation of the backpropagation technique see
-\cite{Goodfellow.2016}.
-
-
-\subparagraph{Extensions.}
+\paragraph{Extensions}
 
 The easiest extension to the network I presented above is to use a different activation
 function; see \cite{Hara.1994} for a comparison. A popular choice is the rectified
@@ -358,13 +340,3 @@ step.
 \end{tikzpicture}
 \caption{Rectified linear unit (ReLU) activation function.}\label{fig:relu_function}
 \end{figure}
-
-The number of parameters in a neural network can explode quickly. The network depicted
-in figure \ref{fig:neural_net} contains $4 \times 5 + 5 \times 5 + 5 \times 1 = 50$
-parameters (excluding biases). If the feature vector had dimension 100 and we had two
-hidden layers with 100 hidden nodes each, the number of parameters would grow to $100
-\times 100 + 100 \times 100 + 100 = 20100$. It is clear from this that overfitting is an
-acute hazard in large networks. Many methods have been developed that can be used to
-mitigate this problem. Two important ones are the use of stochastic gradient descent
-instead of the classical gradient descent algorithm (\cite{Ruppert.1985}) and dropout
-regularization (\cite{Srivastava.2014}).

@@ -1,22 +1,143 @@
 \section{Fitting}
 
+In this section I discuss general fitting techniques with a focus on estimators that
+induce a non-convex loss function. I explain approaches used when training neural
+networks, and how they are extended to regularize the fitting process. I assume that an
+IID dataset $\{(x_i, y_i) | i = 1, \dots, n\}$ is available with features $x_i \in
+\mathbb{R}^p$ and conditional expectation $f(x) = \mathbb{E}[y_i | x_i = x]$. If not
+otherwise stated I assume that that all necessary moments exist. The problem I consider
+in this paper is to solve is to find a \emph{good} approximation of the conditional
+expectation $f$ using the data. In section \textcolor{red}{Introduction} I argued that
+this problem arises naturally in econometrics when estimating nuisance functions that
+are usually conditional expectations.
 
 \subsection{General Fitting Techniques}
 
-Let us first consider general fitting techniques for problems that induce non-convex
-loss functions. Again, I denote the target function by $f(x)$, but let us now consider a
-generic class of approximation functions $\{g | g = g(\cdot; \theta, \eta), \theta \in
-\Theta\}$ with $\theta$ denoting a given parametrization and $\eta$ a hyper-parameter
-configuration. This distinction is necessary since hyper-parameters are not estimated
-during the fitting process. For neural networks a typical hyper-parameter is the network
-architecture or the activation functions. Similarly, for boosting the weak-learners and
-the learning rate are viewed as fixed during the estimation. Cross-validation and
-similar traditional approaches can be used to estimate hyper-parameters on data;
-however, these grid-based methods quickly become infeasible if there are more than two
-variables to calibrate for the same reasons why noisy optimization and integration is
-not feasible in higher dimensions on grids.
+\textcolor{red}{
+Let us consider a generic class of approximation functions $\{g \in C_{a.e.}^1 |
+g(\cdot) = g(\cdot; \theta, \eta), \theta \in \Theta\}$}\footnote{By $C_{a.e.}^1$ I
+denote the space of all functions $\mathbb{R}^p \to \mathbb{R}$ that are at least once
+differentiable almost-everywhere with respect to the Lebesgue measure.}, with $\theta$
+denoting a given parametrization and $\eta$ a hyper-parameter configuration. This
+distinction is necessary since hyper-parameters are not estimated during the fitting
+process. For neural networks a typical hyper-parameter is the network architecture and
+the class of activation functions. Similarly, for boosting the class of weak-learners
+and the learning rate are viewed as fixed during the estimation. Grid-based methods like
+cross-validation and similar traditional approaches can be used to estimate such
+hyper-parameters on the data; however, these methods quickly become infeasible if there
+are more than two variables to calibrate. This is due to the fact that the number of
+grid-points grows exponentially with the dimensions, making the problem computationally
+intractable. Modern approaches utilize Bayesian optimization techniques to deal with
+high-dimensional hyper-parameter spaces; see for example \textcolor{red}{BABLAB}. In the
+following I will assume a fixed hyper-parameter configuration, and for the sake of
+clarity, I will thus suppress any dependence on $\eta$.
+
+\paragraph{Loss function}
+
+What expression do we need to minimize to get an estimator of $\theta$? From statistical
+decision theory we know that the conditional expectation $f$ solves the problem
+\[
+    \min_h \mathbb{E}\left[\ell\left(y_i, h(x_i)\right) \right],
+\]
+when $\ell(y, \hat{y}) = (y - \hat{y})^2$ is the squared error loss function. Given our
+class of approximation functions we can parametrize this problem via $\theta$
+\[
+    \min_{\theta \in \Theta} \mathbb{E}\left[\ell\left(y_i, g(x_i; \theta)\right) \right].
+\]
+Because we don't know the joint distribution of $(x_i, y_i)$ this object is intractable;
+however, we can use a sample analogue or non-linear least-squares approach to define
+the estimator as the solution to a minimization problem containing only observed
+quantities
+\begin{align}
+    \min_{\theta \in \Theta} \sum_{i = 1}^n \ell\left(y_i, g(x_i; \theta)\right).
+    \tag{MP}
+    \label{eq:objective}
+\end{align}
+This defines the empirical loss function $L(\theta) = \sum_{i = 1}^n \ell\left(y_i,
+g(x_i; \theta)\right)$ that we wish to minimize. Define $\hat{\theta} := \text{argmin}
+\, L(\theta)$ as the parameter that solves \ref{eq:objective}, and $\hat{f}(x) := g(x;
+\hat{\theta})$ as the estimator of $f$. Notice that we can make two main mistakes during
+the estimation. First, because we work on a finite sample $\hat{\theta}$ will not
+minimize the expected loss, and second, $f$ may not be representable using the class of
+approximation functions. In section \textcolor{red}{Approximation theorems} I discuss
+results on the representation properties of neural networks, indicating that for large
+enough models the latter problem can be neglected.
+
+\paragraph{Minimization}
+
+How do we minimize $L(\theta)$? An optimal strategy depends on the class of
+approximation functions. In the linear case $g(x; \theta) = x^\top \theta$ we know that
+$L$ is convex and that its minimizer corresponds to the ordinary least-squares
+estimator. In the general case $g$ may induce $L$ to be non-convex. Thus, there may not
+be an analytical solution and there may be multiple local minima. In these settings one
+commonly uses iterative procedures of the form
+
+\begin{algorithmic}[1]
+\State $\theta_0 \gets$ initial value
+\While{not converged}\\
+$\theta_{k+1} \gets O(\theta_k, L)$
+\EndWhile
+\end{algorithmic}
+That is, we choose an initial starting value of the parameter and then iteratively apply
+an updating procedure $O$ to the parameter. The procedure, or optimizer, uses the
+current parameter state $\theta_k$ and the loss function $L$. If we assume more
+structure on $L$ we can use procedures with faster convergence rates. A common
+assumption is differentiability, in which case the procedure uses gradient information
+during the updating step. The most known case being the gradient descent algorithm, that
+performs the following updating rule
+\begin{align}
+    O(\theta_k, L) = \theta_k - \eta_k \nabla L(\theta_k),
+    \tag{GD}
+\end{align}
+where $\eta_k > 0$ governs the learning speed. Many of the modern optimization
+procedures derive from the gradient descent algorithm, such as stochastic gradient
+descent or Adam; see \textcolor{red}{BALBLA}. These optimizers are well studied and
+convergence proofs exist under many different sets of assumptions on $L$ and
+$\{\eta_k\}$. For example, convergence to a local minimum is achieved if $L$ is twice
+continuously differentiable with Lipschitz Hessian; see \textcolor{red}{BLUBU}.
+
+Note that contrary to intuition using second-order information does not necessarily
+improve the procedure. For large models the Hessian matrix of $L$ can be very expensive
+to compute, as closed-form expressions are rarely available. In this case the gain in
+accuracy has to offset the loss in computational time. This is why optimizers using
+second-order information are rarely used when training models with many parameters, in
+comparison to small-scale models, like logistic regression which is commonly solved
+using the second-order Newton-Raphson algorithm; see \textcolor{red}{BLABS}.
+
 
 \subsection{Fitting of Neural Networks}
 
+The complexity of training a neural network can be attributed to two main problems. One,
+the (computationally efficient) calculation of the gradient $\nabla L(\theta)$, and two,
+the avoidance of overfitting.
 
-\subsection{Regularization of Neural Networks}
+\paragraph{Backpropagation}
+
+As we have seen above, computation of the gradient $\nabla L(\theta)$ is essential to
+train a neural network. Since neural networks are constructed using a composition of
+nonlinear activation functions applied to matrix-vector products, the structure of the
+derivative can be derived using the chain-rule. Unfortunately, naive implementations of
+this procedure are so inefficient that they cannot be used to train large neural
+networks. The term backpropagation was coined by \cite{Rumelhart.1986}, who proposed a
+computationally efficient algorithm for the calculation of the gradient. For a detailed
+explanation of the backpropagation technique and its connection to automatic
+differentiation see section 6.5 of \cite{Goodfellow.2016}.
+
+\paragraph{Regularization}
+
+The number of parameters in a neural network can explode quickly. The network depicted
+in figure \ref{fig:neural_net} contains $4 \times 5 + 5 \times 5 + 5 \times 1 = 50$
+parameters (excluding the biases). In the case of a 100-dimensional feature vector and
+two hidden layers with 100 hidden nodes each, the number of parameters would grow to
+$100 \times 100 + 100 \times 100 + 100 = 20100$. Clearly overfitting is an acute hazard
+in large networks. Many methods have been developed to mitigate this problem, such as
+stochastic gradient descent (\cite{Ruppert.1985}), dropout regularization
+(\cite{Srivastava.2014}), early stopping (\cite{Caruana.2000}) or weight decay
+(\cite{Krogh.1991}).
+
+In my simulations I use two different approaches to fit neural networks. In the first,
+which I call \emph{unregularized}, I use the Adam optimizer that applies a similar
+method as stochastic gradient descent. In the second, which I call \emph{regularized}, I
+use the same optimizer and additionally place an $\ell_1$-penalty on the weights
+connecting the input layer and the first hidden layer. This approach is similar to
+weight-decay, which uses an $\ell_2$-penalty on all weights.
