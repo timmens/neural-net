@@ -22,13 +22,13 @@ skipped if the reader is familiar with neural networks. In section 2 I discuss f
 procedures for neural networks. In particular, I will describe $\ell_1$ and $\ell_2$
 regularization for the
 
-\paragraph{Neural Networks}
+\subsection{A Primer on Neural Networks}
 
-In the following I will shed light on the inner workings of feed-forward networks by
-showing that networks can be formulated analytically using simple linear algebra. I will
-also comment on the backpropagation algorithm which provides a way to estimate the
-parameters of a network using data. For a detailed description of neural networks and
-the backpropagation algorithm see \cite{Goodfellow.2016, Murphy.2012, Hastie.2008}.
+In the remaining parts of this section I provide a small primer on feed-forward neural
+networks. I discuss the connection between their graphical and mathematical
+representation, as well as common concepts such as the activation function. Fitting
+techniques are presented in the next section. For a detailed description of neural
+networks see \cite{Goodfellow.2016, Murphy.2012, Hastie.2008}.
 
 Another popular regression method now mainly developed in the machine learning
 literature are \emph{feed-forward} neural networks. The approximation quality of neural
@@ -362,7 +362,7 @@ step.
 The number of parameters in a neural network can explode quickly. The network depicted
 in figure \ref{fig:neural_net} contains $4 \times 5 + 5 \times 5 + 5 \times 1 = 50$
 parameters (excluding biases). If the feature vector had dimension 100 and we had two
-hidden layers with 100 hidden nodes each, the number of paramaters would grow to $100
+hidden layers with 100 hidden nodes each, the number of parameters would grow to $100
 \times 100 + 100 \times 100 + 100 = 20100$. It is clear from this that overfitting is an
 acute hazard in large networks. Many methods have been developed that can be used to
 mitigate this problem. Two important ones are the use of stochastic gradient descent
