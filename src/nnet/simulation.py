@@ -77,11 +77,11 @@ def get_data_kwargs(n_samples, _type):
 
 FITTER = {
     # "method": (class, kwargs)
-    "ols": (LinearRegression, {"fit_intercept": False, "copy_X": False}),
-    "ridge": (RidgeCV, {"fit_intercept": False, "cv": 3, "alphas": ALPHAS}),
+    "ols": (LinearRegression, {"copy_X": False}),
+    "ridge": (RidgeCV, {"cv": 3, "alphas": ALPHAS}),
     "lasso": (
         LassoCV,
-        {"fit_intercept": False, "cv": 3, "n_jobs": -1, "alphas": ALPHAS},
+        {"cv": 3, "n_jobs": -1, "alphas": ALPHAS},
     ),
     "nnet": (CustomMLP, {"n_epochs": 100, "sparsity_level": 0.01}),
     "nnet_regularized": (
