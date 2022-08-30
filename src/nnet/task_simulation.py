@@ -12,15 +12,17 @@ from nnet.simulation import simulation_task
 for comb in COMBINATIONS:
 
     task_kwargs = {
+        "iteration": comb["iteration"],
         "fitter": comb["fitter"],
         "n_samples": comb["n_samples"],
         "name": comb["name"],
         "produces": BLD.joinpath("simulation", f"{comb['_id']}.csv"),
     }
 
+    @pytask.mark.persist
     @pytask.mark.task(id=comb["_id"], kwargs=task_kwargs)
-    def task_simulation(fitter, n_samples, name, produces):
-        result = simulation_task(fitter, n_samples, name)
+    def task_simulation(iteration, fitter, n_samples, name, produces):
+        result = simulation_task(iteration, fitter, n_samples, name)
         result.to_csv(produces)
 
 
