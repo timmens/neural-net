@@ -3,6 +3,18 @@
 
 \subsection{General Fitting Techniques}
 
+Let us first consider general fitting techniques for problems that induce non-convex
+loss functions. Again, I denote the target function by $f(x)$, but let us now consider a
+generic class of approximation functions $\{g | g = g(\cdot; \theta, \eta), \theta \in
+\Theta\}$ with $\theta$ denoting a given parametrization and $\eta$ a hyper-parameter
+configuration. This distinction is necessary since hyper-parameters are not estimated
+during the fitting process. For neural networks a typical hyper-parameter is the network
+architecture or the activation functions. Similarly, for boosting the weak-learners and
+the learning rate are viewed as fixed during the estimation. Cross-validation and
+similar traditional approaches can be used to estimate hyper-parameters on data;
+however, these grid-based methods quickly become infeasible if there are more than two
+variables to calibrate for the same reasons why noisy optimization and integration is
+not feasible in higher dimensions on grids.
 
 \subsection{Fitting of Neural Networks}
 
