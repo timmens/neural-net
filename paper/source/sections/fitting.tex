@@ -1,36 +1,34 @@
 \section{Fitting}
+\label{seq:fitting}
 
 In this section I discuss general fitting techniques with a focus on estimators that
-induce a non-convex loss function. I explain approaches used when training neural
-networks, and how they are extended to regularize the fitting process. I assume that an
-IID dataset $\{(x_i, y_i) | i = 1, \dots, n\}$ is available with features $x_i \in
-\mathbb{R}^p$ and conditional expectation $f(x) = \mathbb{E}[y_i | x_i = x]$. If not
-otherwise stated I assume that that all necessary moments exist. The problem I consider
-in this paper is to solve is to find a \emph{good} approximation of the conditional
-expectation $f$ using the data. In section \textcolor{red}{Introduction} I argued that
-this problem arises naturally in econometrics when estimating nuisance functions that
-are usually conditional expectations.
+induce a non-convex but differentiable loss function. I explain approaches used when
+training neural networks, and how they are extended to regularize the fitting process. I
+assume that an IID dataset $\{(x_i, y_i) | i = 1, \dots, n\}$ is available with features
+$x_i \in \mathbb{R}^p$ and conditional expectation $f(x) = \mathbb{E}[y_i | x_i = x]$.
+If not otherwise stated I assume that that all necessary moments exist. The problem I
+consider in this paper is to find a good approximation, in a mean-squared-error sense,
+of the conditional expectation $f$ using the data. In Section \ref{seq:introduction} I
+argued that this problem arises naturally in econometrics when estimating nuisance
+functions.
 
 \subsection{General Fitting Techniques}
 
-\textcolor{red}{
-Let us consider a generic class of approximation functions $\{g \in C_{a.e.}^1 |
-g(\cdot) = g(\cdot; \theta, \eta), \theta \in \Theta\}$}\footnote{By $C_{a.e.}^1$ I
-denote the space of all functions $\mathbb{R}^p \to \mathbb{R}$ that are at least once
-differentiable almost-everywhere with respect to the Lebesgue measure.}, with $\theta$
-denoting a given parametrization and $\eta$ a hyper-parameter configuration. This
-distinction is necessary since hyper-parameters are not estimated during the fitting
-process. For neural networks a typical hyper-parameter is the network architecture and
-the class of activation functions. Similarly, for boosting the class of weak-learners
-and the learning rate are viewed as fixed during the estimation. Grid-based methods like
-cross-validation and similar traditional approaches can be used to estimate such
-hyper-parameters on the data; however, these methods quickly become infeasible if there
-are more than two variables to calibrate. This is due to the fact that the number of
-grid-points grows exponentially with the dimensions, making the problem computationally
-intractable. Modern approaches utilize Bayesian optimization techniques to deal with
-high-dimensional hyper-parameter spaces; see for example \textcolor{red}{BABLAB}. In the
-following I will assume a fixed hyper-parameter configuration, and for the sake of
-clarity, I will thus suppress any dependence on $\eta$.
+Let us consider a generic class of parametrized approximation functions $\{g | g(\cdot;
+\theta, \eta) : \mathbb{R}^p \to \mathbb{R}, \theta \in \Theta(\eta)\}$, with $\theta$
+denoting a given parametrization and $\eta$ a hyper-parameter configuration.
+Hyper-parameter denote design choices of a model that are not estimated at the same time
+as the parameters. For neural networks a typical hyper-parameter is the network
+architecture and the class of activation functions. Similarly, for boosting the class of
+weak-learners and the learning rate are viewed as fixed during the estimation.
+Grid-based methods like cross-validation and similar traditional approaches can be used
+to estimate such hyper-parameters on the data; however, these methods quickly become
+infeasible if there are more than two variables to calibrate. This is due to the fact
+that the number of grid-points grows exponentially with the dimensions, making the
+problem computationally intractable. Modern approaches utilize Bayesian optimization
+techniques to deal with high-dimensional hyper-parameter spaces; see for example
+\cite{Snoek.2012}. In the following I will assume a fixed hyper-parameter configuration,
+and for the sake of clarity, I will thus suppress any dependence on $\eta$.
 
 \paragraph{Loss function}
 
@@ -57,11 +55,11 @@ This defines the empirical loss function $L(\theta) = \sum_{i = 1}^n \ell\left(y
 g(x_i; \theta)\right)$ that we wish to minimize. Define $\hat{\theta} := \text{argmin}
 \, L(\theta)$ as the parameter that solves \ref{eq:objective}, and $\hat{f}(x) := g(x;
 \hat{\theta})$ as the estimator of $f$. Notice that we can make two main mistakes during
-the estimation. First, because we work on a finite sample $\hat{\theta}$ will not
+the estimation. First, because we work on a finite sample, $\hat{\theta}$ will not
 minimize the expected loss, and second, $f$ may not be representable using the class of
-approximation functions. In section \textcolor{red}{Approximation theorems} I discuss
-results on the representation properties of neural networks, indicating that for large
-enough models the latter problem can be neglected.
+approximation functions. In Section \ref{seq:rates} I discuss results on the
+representation properties of neural networks, indicating that for large enough models
+the latter problem can be neglected.
 
 \paragraph{Minimization}
 
@@ -70,31 +68,39 @@ approximation functions. In the linear case $g(x; \theta) = x^\top \theta$ we kn
 $L$ is convex and that its minimizer corresponds to the ordinary least-squares
 estimator. In the general case $g$ may induce $L$ to be non-convex. Thus, there may not
 be an analytical solution and there may be multiple local minima. In these settings one
-commonly uses iterative procedures of the form
-
-\begin{algorithmic}[1]
-\State $\theta_0 \gets$ initial value
-\While{not converged}\\
-$\theta_{k+1} \gets O(\theta_k, L)$
-\EndWhile
-\end{algorithmic}
+commonly uses iterative procedures of the form as specified in Algorithm
+\ref{alg:optimizer}.
+\vspace{-1em}
+\begin{figure}[!ht]
+    \centering
+    \begin{minipage}{.7\linewidth}
+        \begin{algorithm}[H]
+            \begin{algorithmic}[1]
+                \State $\theta_0 \gets$ initial value
+                \While{not converged}\\
+                $\theta_{k+1} \gets O(\theta_k, L)$
+                \EndWhile
+            \end{algorithmic}
+        \caption{Iterative optimization procedure}
+        \label{alg:optimizer}
+        \end{algorithm}
+    \end{minipage}
+\end{figure}
 That is, we choose an initial starting value of the parameter and then iteratively apply
-an updating procedure $O$ to the parameter. The procedure, or optimizer, uses the
-current parameter state $\theta_k$ and the loss function $L$. If we assume more
-structure on $L$ we can use procedures with faster convergence rates. A common
-assumption is differentiability, in which case the procedure uses gradient information
-during the updating step. The most known case being the gradient descent algorithm, that
-performs the following updating rule
-\begin{align}
+an updating procedure $O$ to the parameter. If we assume more structure on $L$ we can
+use procedures with faster convergence rates. A common assumption is differentiability,
+in which case the procedure uses gradient information during the updating step. The most
+known case being the gradient descent algorithm, that performs the following updating
+rule
+\[
     O(\theta_k, L) = \theta_k - \eta_k \nabla L(\theta_k),
-    \tag{GD}
-\end{align}
+\]
 where $\eta_k > 0$ governs the learning speed. Many of the modern optimization
 procedures derive from the gradient descent algorithm, such as stochastic gradient
-descent or Adam; see \textcolor{red}{BALBLA}. These optimizers are well studied and
+descent or Adam; see e.g., \cite{Kingma.2014}. These optimizers are well studied and
 convergence proofs exist under many different sets of assumptions on $L$ and
 $\{\eta_k\}$. For example, convergence to a local minimum is achieved if $L$ is twice
-continuously differentiable with Lipschitz Hessian; see \textcolor{red}{BLUBU}.
+continuously differentiable with Lipschitz gradient; see \cite{Lee.2016}.
 
 Note that contrary to intuition using second-order information does not necessarily
 improve the procedure. For large models the Hessian matrix of $L$ can be very expensive
@@ -102,7 +108,7 @@ to compute, as closed-form expressions are rarely available. In this case the ga
 accuracy has to offset the loss in computational time. This is why optimizers using
 second-order information are rarely used when training models with many parameters, in
 comparison to small-scale models, like logistic regression which is commonly solved
-using the second-order Newton-Raphson algorithm; see \textcolor{red}{BLABS}.
+using the second-order Newton-Raphson algorithm; see e.g., \cite{Sklearn}.
 
 
 \subsection{Fitting of Neural Networks}
@@ -121,7 +127,7 @@ this procedure are so inefficient that they cannot be used to train large neural
 networks. The term backpropagation was coined by \cite{Rumelhart.1986}, who proposed a
 computationally efficient algorithm for the calculation of the gradient. For a detailed
 explanation of the backpropagation technique and its connection to automatic
-differentiation see section 6.5 of \cite{Goodfellow.2016}.
+differentiation see Section 6.5 of \cite{Goodfellow.2016}.
 
 \paragraph{Regularization}
 

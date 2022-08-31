@@ -1,12 +1,9 @@
 In this paper I investigate the predictive performance of neural networks. I compare
 unregularized and regularized networks, where in the latter case an $\ell_1$-type
 penalty is placed on the weights. For the unregularized case I discuss convergence
-rates.
-\textcolor{red}{One sentence to rates.}
-Using a simulation study I investigate the question whether neural networks can
+rates. Using a simulation study I investigate the question whether neural networks can
 recover sparse structures in high-dimensional settings, and if their performance is
-superior to other methods as the Lasso or Boosting.
-\textcolor{red}{One sentence to findings.}
-
-Computer codes and additional materials are found in the online repository:
-\url{https://github.com/timmens/neural-net}.
+superior to other methods. I find that for non-linear DGPs neural networks outperform
+linear models, but are beaten by boosting, whereas for linear DGPs OLS and the Lasso
+beat neural networks and boosting. Computer codes and additional materials can be found
+in the online repository: \url{https://github.com/timmens/neural-net}.
