@@ -83,7 +83,7 @@ FITTER = {
         LassoCV,
         {"cv": 3, "n_jobs": -1, "alphas": ALPHAS},
     ),
-    "nnet": (CustomMLP, {"n_epochs": 100, "sparsity_level": 0.01}),
+    "nnet": (CustomMLP, {"n_epochs": 100}),
     "nnet_regularized": (
         CustomMLP,
         {"n_epochs": 100, "sparsity_level": 0.01, "l1_penalty": 0.05},

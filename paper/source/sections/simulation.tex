@@ -1,11 +1,121 @@
 \section{Simulation}
 \label{seq:simulation}
 
+In this section I discuss the simulation part of this paper. First, I talk about the
+study design, the employed fitting methods, and its results. Then I talk about the
+difficulties that arise when implementing industry standard machine learning methods.
+All computer codes needed to reproduce the simulation are available in the online
+repository \url{http://github.com/timmens/neural-net}.
 
-\subsection{Implementation}
-
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Study Design
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Study Design}
 
+The simulation is run over three different data generating processes types, extending
+the loop over the number of samples $n \in \{100, 1.000, 10.000\}$. For each
+specification I simulate $B = 100$ iterations. In each iteration, a model is fitted
+using training data of size $n$ and its predictions are evaluated on a large testing set
+that is simulated once for each specification. The metric I collect is the average
+square error of the predictions on the testing set.
 
+\paragraph{Linear}
+
+For the linear model I simulate IID data with features $x_i \sim \mathcal{N}(0, I_p)$,
+where $p = 30$ for all sample sizes. The outcomes are computed using $y_i = \beta^\top
+x_i + e_i$, where $e_i \sim \mathcal{N}(0, 0.25)$ and $\beta$ is drawn randomly once
+such that its $\ell_2$-norm is 10.
+
+
+\paragraph{Linear High-dimensional}
+
+For the high-dimensional case I simulate IID data with features $x_i \sim \mathcal{N}(0,
+I_p)$, where $p = 0.1 n$. To incorporate sparsity I select $10\%$ of the features to be
+informative. Let $x_{i\mathcal{I}}$ denote the vector containing these informative
+features. Then the outcomes are computed using $y_i = \beta^\top x_{i\mathcal{I}} +
+e_i$, where $e_i \sim \mathcal{N}(0, 0.25)$ and $\beta$ is drawn randomly once for each
+parameter dimension such that its $\ell_2$-norm is 10.
+
+\paragraph{Nonlinear High-dimensional}
+
+For the high-dimensional case I simulate IID data with features $x_i \sim \mathcal{N}(0,
+I_p)$, where $p = 0.1 n$. To incorporate sparsity I select $10\%$ of the features to be
+informative. Let $x_{i\mathcal{I}}$ denote the vector containing these informative
+features. Then the outcomes are computed using $y_i = \beta^\top x_{i\mathcal{I}} +
+e_i$, where $e_i \sim \mathcal{N}(0, 0.25)$ and $\beta$ is drawn randomly once for each
+parameter dimension such that its $\ell_2$-norm is 10.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Methods
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Methods}
+
+I employ four different fitting methods in this study.
+
+\begin{center}
+\begin{tabular}{r | p{0.8\linewidth}}
+    \textit{OLS} & An ordinary least squares model with intercept \\
+    \textit{Lasso} & A Lasso model with intercept that uses $3$-fold cross-validated to
+        determine the penalty parameter over the grid $(0.1, 0.001, 0.0001)$  \\
+    \textit{Net} & A neural network with ReLU activation functions and two hidden layers, where
+        the first layer has $p/2$ nodes and the second $p/4$. The network is trained over
+        100 epochs using the Adam optimizer  \\
+    \textit{RegNet} & A neural network with ReLU activation functions and five hidden
+        layers with $\max(2, s p)$ nodes, where $s \in (0, 1)$ is a sparsity level set
+        to $0.01$. Further, the weights connecting the input layer and first hidden
+        layer are penalized using an $\ell_1$ norm. The penalty parameter is set to
+        $0.05$. The network is trained over 100 epochs using the Adam optimizer.
+\end{tabular}
+\end{center}
+
+\begin{remark}
+Given the sparse nature of the high-dimensional data generating processes one could
+argue that its unfair to incorporate this information into the regularized network via
+a sparsity level parameter. This is a design choice I had to take since otherwise the
+training would take too long; note that for $n = 10.000$ we have $p = 1.000$ features,
+which combined with two hidden layers of size $500$ and $250$ would yield $625.000$
+parameters, which cannot be trained in a simulation context on a standard computer.
+\end{remark}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Results
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Results}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Implementation
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Notes on Implementation}
+
+\paragraph{Training Time}
+
+When implementing simulation exercises that use many samples and many features the usage
+of machine learning algorithm can be problematic because of very large training times.
+Training time of state-of-the-art models can take weeks on special hardware. Running
+these algorithms on Laptop CPUs can increase the training time so much that smaller
+models have to be chosen in order for the training process to converge in reasonable
+time. In my simulation I had to choose relatively small networks to circumvent this
+problem. A simple solution here is to run the code on GPUs. Since these algorithms are
+written to perform best on GPUs one can expect a speed-up of up to 20.
+
+\paragraph{Theory and Practice}
+
+There is a further problem that hinders the soundness of classical studies. Modern
+implementations of machine learning algorithms are implemented in a modular fashion and
+each component is optimized to achieve good results even under default arguments, which
+in certain cases sets hyper-parameters dependent on the data. Further, the actual
+implementation and application of these algorithms usually deviates from the
+mathematical definition. One could argue that this calls for libraries that only
+implement the theoretical specification in order to make a clearer connection between
+simulation results and theoretical arguments; however, this would miss the point that in
+practice there are not used. This is a prime example where the gap between theory
+hinders scientific analysis of these algorithms.
+
+\paragraph{Custom Implementation}
+
+Unrelated to the simulation study I implemented my own general neural network and its
+fitting procedure to better understand the technical details. Its designed for both
+classification and regression, and tested on the MNIST data set containing hand-written
+digits. More details on this mini-project are described in the online repository.
