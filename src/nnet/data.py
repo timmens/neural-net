@@ -58,8 +58,9 @@ def simulate_data(
     if n_informative is None:
         n_informative = int(np.floor(0.1 * n_features))
 
-    X = rng.normal(size=(n_samples, n_features))
+    X = rng.uniform(low=-1, high=1, size=(n_samples, n_features))
     X_informative = X[:, :n_informative]
+
     noise = rng.normal(size=n_samples, scale=noise)
     coef = simulate_coefficients(n_params=n_informative)
 
@@ -78,15 +79,15 @@ def simulate_data(
 
 def simulate_coefficients(n_params):
     rng = np.random.default_rng(seed=n_params)
-    coef = rng.integers(low=-1_000, high=1_000, size=n_params)
-    coef = coef / 100
-    coef = np.round(coef, decimals=2)
-    return coef
+    coef = rng.normal(size=n_params)
+    return coef / np.linalg.norm(coef)
 
 
 def nonlinear_mapping(x, coef):
-    z = (x**2) @ coef
-    return (np.sin(z) + np.clip(z, a_min=0, a_max=None)) / 100
+    # z = x @ coef
+    # y = z ** 3
+    # return y
+    return np.prod(x, axis=1)
 
 
 # ======================================================================================

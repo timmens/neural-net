@@ -82,9 +82,9 @@ that contains hand-written digits.
 > **Warning** Jax is not supported on windows.
 
 If you want to run my custom implementation locally I suggest running the notebook
-[`[root]/src/nnet/neural_network.ipynb`](https://github.com/timmens/neural-net/blob/main/src/nnet/neural_network.ipynb)
+[`[root]/src/nnet/neural_network.ipynb`](https://github.com/timmens/neural-net/blob/main/src/nnet/classify_digits.ipynb)
 ---or simply view it on
-[nbviewer](https://nbviewer.org/github/timmens/neural-net/blob/main/src/nnet/neural_network.ipynb).
+[nbviewer](https://nbviewer.org/github/timmens/neural-net/blob/main/src/nnet/classify_digits.ipynb).
 
 ______________________________________________________________________
 

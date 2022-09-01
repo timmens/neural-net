@@ -26,7 +26,7 @@ SIMULATION_SPEC = {
     },
 }
 
-N_SIMULATIONS = 50
+N_SIMULATIONS = 100
 
 N_TEST_SAMPLES = 10_000
 
@@ -83,10 +83,10 @@ FITTER = {
         LassoCV,
         {"cv": 3, "n_jobs": -1, "alphas": ALPHAS},
     ),
-    "nnet": (CustomMLP, {"n_epochs": 100}),
+    "nnet": (CustomMLP, {"n_epochs": 150}),
     "nnet_regularized": (
         CustomMLP,
-        {"n_epochs": 100, "sparsity_level": 0.01, "l1_penalty": 0.05},
+        {"n_epochs": 150, "sparsity_level": 0.02, "l1_penalty": 0.1},
     ),
     "nnet_sklearn": (
         MLPRegressor,

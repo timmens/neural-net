@@ -12,38 +12,39 @@ repository \url{http://github.com/timmens/neural-net}.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Study Design}
 
-The simulation is run over three different data generating processes types, extending
-the loop over the number of samples $n \in \{100, 1.000, 10.000\}$. For each
-specification I simulate $B = 100$ iterations. In each iteration, a model is fitted
-using training data of size $n$ and its predictions are evaluated on a large testing set
-that is simulated once for each specification. The metric I collect is the average
-square error of the predictions on the testing set.
+The simulation is run over three different data generating processes types and three
+levels of the sample size $n \in \{100, 1.000, 10.000\}$. For each specification I
+simulate $100$ iterations. In each iteration, a model is fitted using training data of
+size $n$ and its predictions are evaluated on a large testing set that is simulated once
+for each specification. I measure the average square error of the predictions on the
+testing set. The following data generating processes are implemented.
 
 \paragraph{Linear}
 
-For the linear model I simulate IID data with features $x_i \sim \mathcal{N}(0, I_p)$,
-where $p = 30$ for all sample sizes. The outcomes are computed using $y_i = \beta^\top
-x_i + e_i$, where $e_i \sim \mathcal{N}(0, 0.25)$ and $\beta$ is drawn randomly once
-such that its $\ell_2$-norm is 10.
-
+For the linear model I simulate IID data with features $x_i \sim \mathcal{U}[-1, 1]^p$,
+where $p = 30$ for all sample sizes.\footnote{By $\mathcal{U}[-1, 1]^p$ I denote the
+$p$-dimensional multivariate uniform distribution on $[-1, 1]^p$ with independent
+components.} The outcomes are computed using $y_i = \beta^\top x_i + e_i$, where $e_i
+\sim \mathcal{N}(0, 1/4)$ and $\beta$ is drawn randomly once such that its $\ell_2$-norm
+is 1.
 
 \paragraph{Linear High-dimensional}
 
-For the high-dimensional case I simulate IID data with features $x_i \sim \mathcal{N}(0,
-I_p)$, where $p = 0.1 n$. To incorporate sparsity I select $10\%$ of the features to be
-informative. Let $x_{i\mathcal{I}}$ denote the vector containing these informative
-features. Then the outcomes are computed using $y_i = \beta^\top x_{i\mathcal{I}} +
-e_i$, where $e_i \sim \mathcal{N}(0, 0.25)$ and $\beta$ is drawn randomly once for each
-parameter dimension such that its $\ell_2$-norm is 10.
+For the high-dimensional case I simulate IID data with features $x_i \sim
+\mathcal{U}[-1, 1]^p$, where $p = \lfloor n / 10 \rfloor$. To incorporate sparsity I
+randomly select $10\%$ of the features to be informative. Let $x_{i\mathcal{I}}$ denote
+the vector containing the informative features. Then the outcomes are computed using
+$y_i = \beta^\top x_{i\mathcal{I}} + e_i$, where $e_i \sim \mathcal{N}(0, 1/4)$.
 
 \paragraph{Nonlinear High-dimensional}
 
-For the high-dimensional case I simulate IID data with features $x_i \sim \mathcal{N}(0,
-I_p)$, where $p = 0.1 n$. To incorporate sparsity I select $10\%$ of the features to be
-informative. Let $x_{i\mathcal{I}}$ denote the vector containing these informative
-features. Then the outcomes are computed using $y_i = \beta^\top x_{i\mathcal{I}} +
-e_i$, where $e_i \sim \mathcal{N}(0, 0.25)$ and $\beta$ is drawn randomly once for each
-parameter dimension such that its $\ell_2$-norm is 10.
+For the nonlinear high-dimensional case I simulate IID data with features $x_i \sim
+\mathcal{U}[-1, 1]^p$, where $p = \lfloor n / 10 \rfloor$. To incorporate sparsity I
+select $10\%$ of the features to be informative. Let $x_{i\mathcal{I}}$ denote the
+vector containing the informative features. Then the outcomes are computed using
+$y_i = \prod_{j\in\mathcal{I}} x_{ij} + e_i$, where $e_i \sim \mathcal{N}(0, 1/4)$ and
+$\beta$ is drawn randomly once for each parameter dimension such that its $\ell_2$-norm
+is 1.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -55,17 +56,21 @@ I employ four different fitting methods in this study.
 
 \begin{center}
 \begin{tabular}{r | p{0.8\linewidth}}
-    \textit{OLS} & An ordinary least squares model with intercept \\
-    \textit{Lasso} & A Lasso model with intercept that uses $3$-fold cross-validated to
-        determine the penalty parameter over the grid $(0.1, 0.001, 0.0001)$  \\
-    \textit{Net} & A neural network with ReLU activation functions and two hidden layers, where
-        the first layer has $p/2$ nodes and the second $p/4$. The network is trained over
-        100 epochs using the Adam optimizer  \\
+    \textit{OLS} & An ordinary least squares model with intercept. \\
+    \textit{Lasso} & A Lasso model with intercept that uses $3$-fold cross-validation to
+        determine the penalty parameter over the grid $(0.1, 0.001, 0.0001)$.  \\
+    \textit{Net} & A neural network with ReLU activation functions and two hidden
+        layers, where the first layer has $p/2$ nodes and the second $p/4$. The network
+        is trained over 100 epochs using the Adam optimizer.  \\
     \textit{RegNet} & A neural network with ReLU activation functions and five hidden
-        layers with $\max(2, s p)$ nodes, where $s \in (0, 1)$ is a sparsity level set
-        to $0.01$. Further, the weights connecting the input layer and first hidden
-        layer are penalized using an $\ell_1$ norm. The penalty parameter is set to
-        $0.05$. The network is trained over 100 epochs using the Adam optimizer.
+        layers with $\max(2, \lfloor s \cdot p \rfloor)$ nodes, where $s \in (0, 1)$ is
+        a sparsity level set to $0.01$. Further, the weights connecting the input layer
+        and first hidden layer are penalized using an $\ell_1$-norm. The penalty
+        parameter is set to $0.05$. The network is trained over 100 epochs using the
+        Adam optimizer. \\
+    \textit{Boosting} & A boosting algorithm with tree weak-learners of depth 2. The
+        algorithm is run over 1.000 iterations. In each split in the regression tree
+        a randomly selected subset of $20\%$ of the features is considered.
 \end{tabular}
 \end{center}
 
@@ -83,11 +88,10 @@ parameters, which cannot be trained in a simulation context on a standard comput
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Results}
 
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Implementation
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Notes on Implementation}
+\subsection*{Implementation Remarks}
 
 \paragraph{Training Time}
 

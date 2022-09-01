@@ -1,15 +1,53 @@
 \section{Rates}
 \label{seq:rates}
 
+In this section I consider two different kind of results. First, I present
+representation results that answer the question which classes of functions can be
+approximated by a neural network. Second, I consider convergence results that answer
+the question if a neural network can learn a function using data.
+
 \subsection{Approximation Theorems}
 
-The approximation quality of neural networks has been studied extensively in the
-literature. Several so called universal approximation theorems have been proven which
-show that under certain conditions on the network architecture they approximate any
-continuous function arbitrary well.
+When we use neural networks to estimate functional relationships we hope that the
+network can approximate the true function as closely as possible. A minimal assumption
+that can give us hope would be if we could be assured that there exists a neural
+network that can approximate the target function with some degree of accuracy. The
+well known Weierstra{\ss} theorem provides this result for any continuous real-valued
+function $f$ defined on a closed domain $[a, b]$: For every $\epsilon > 0$ there exists
+a polynomial $q_\epsilon$ such that $\sup_{x} |f(x) - q_\epsilon(x)| < \epsilon$.
+Neural networks are more flexible than polynomials in their architecture; one can alter
+the number of hidden neurons per layer, the number of layers or the class of activation
+functions. Here I present two different results. In the first we consider a class of
+networks with one hidden layer that can grow arbitrarily large. In the second I consider
+a class of networks with fixed width per layer that can grow arbitrarily deep. In both
+cases the result is that under regularity conditions networks can approximate any
+continuous functions arbitrarily well.
 
-\cite{Hornik.1991}. Statements like the universal
-approximation theorems and the empirical success of networks make them a suitable
-surrogate model candidate.
+\begin{theorem}
+   Let $\sigma : \mathbb{R} \to \mathbb{R}$ be any non-polynomial continuous function.
+   Let $\mathbb{N}_p^\sigma$ represent the class of neural networks with actiation
+   function $\sigma$, input dimension $p$ and one hidden layer with an arbitrary number
+   of neurons. Then $\mathbb{N}_p^\sigma$ is dense in the space of continuous functions
+   $[0, 1]^p \to \mathbb{R}$.
+\end{theorem}
+\begin{proof}
+    See \cite{Hornik.1989,Cybenko.1989,Hornik.1991,Pinkus.1999}.
+\end{proof}
+
+\textcolor{red}{Write small bit on intuition with series regression and weierstrass}
+
+
+\begin{theorem}
+    Let $\sigma : \mathbb{R} \to \mathbb{R}$ be any non-affine continuous function such
+    that there exists some $x \in \mathbb{R}$ for which $\sigma$ is continuously
+    differentiable at $x$ with $\sigma'(x) \neq 0$. Let $\mathbb{N}_{p, h}^\sigma$
+    denote the class of networks with activation functions $\sigma$, input dimension
+    $p$ and an arbitrary number of hidden layers that each have $h$ number of neurons.
+    Then $\mathbb{N}_{p,h}^\sigma$ is dense in the space of continuous functions
+    $[0, 1]^p \to \mathbb{R}$ if $h \geq p + 3$.
+\end{theorem}
+\begin{proof}
+    See \cite{Kidger.2020}.
+\end{proof}
 
 \subsection{Convergence Rates}
