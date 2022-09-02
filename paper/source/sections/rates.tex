@@ -1,31 +1,30 @@
 \section{Rates}
 \label{seq:rates}
 
-In this section I consider two different kind of results. First, I present
-representation results that answer the question which classes of functions can be
+In this section, I consider two different kinds of results. First, I present
+representation results that answer the question of which classes of functions can be
 approximated by a neural network. Second, I consider convergence results that answer
-the question if a neural network can learn a function using data.
+the question if a neural network can learn a function from data.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Approximation Theorems
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Approximation Theorems}
 
-When we use neural networks to estimate functional relationships we hope that the
+When we use neural networks to estimate functional relationships, we hope that the
 network can approximate the true function as closely as possible. A minimal assumption
-that can give us hope would be if we could be assured that there exists a neural
-network that can approximate the target function with some degree of accuracy. The
-well known Weierstra{\ss} theorem provides this result for any continuous real-valued
-function $f$ defined on a closed domain $[a, b]$: For every $\epsilon > 0$ there exists
-a polynomial $q_\epsilon$ such that $\sup_{x} |f(x) - q_\epsilon(x)| < \epsilon$; for
-a proof consult any advanced real analysis textbook. Neural networks are more flexible
-than polynomials in their architecture; one can alter the number of hidden neurons per
-layer, the number of layers or the class of activation functions. Here I present two
-different results. In the first we consider a class of networks with one hidden layer
-that can grow arbitrarily large. In the second I consider a class of networks with fixed
-width per layer that can grow arbitrarily deep. In both cases the result is that under
-regularity conditions networks can approximate any continuous functions arbitrarily
-well.
+that can give us hope would be if we could be assured that there exists a neural network
+that can approximate the target function with some degree of accuracy. The well known
+Weierstra{\ss} theorem provides this result for any continuous real-valued function $f$
+defined on a closed domain $[a, b]$: For every $\epsilon > 0$ there exists a polynomial
+$q_\epsilon$ such that $\sup_{x} |f(x) - q_\epsilon(x)| < \epsilon$; for a proof consult
+any advanced real analysis textbook. Neural networks are more flexible than polynomials
+in their architecture; one can alter the number of hidden neurons per layer, the number
+of layers, or the class of activation functions. Here I present two different results.
+In the first, we consider a class of networks with one hidden layer that can grow
+arbitrarily large. In the second, I consider a class of networks with fixed width per
+layer that can grow arbitrarily deep. In both cases, the result is that under regularity
+conditions, networks can approximate any continuous functions arbitrarily well.
 
 \begin{theorem}
    Let $\sigma : \mathbb{R} \to \mathbb{R}$ be any non-polynomial continuous function.
@@ -38,12 +37,12 @@ well.
     See \cite{Cybenko.1989,Hornik.1991,Pinkus.1999}.
 \end{proof}
 
-To get more intuition on why this result holds consider a one-layer network with $h$
+To get more intuition on why this result holds, consider a one-layer network with $h$
 hidden neurons
 \[
     f(x) = a_0 + \sum_{l = 1}^h a_l \cdot \sigma(w_l^\top x + b_l).
 \]
-Now by cleverly setting the activation function and parameters we can reconstruct basis
+By cleverly setting the activation function and parameters, we can reconstruct basis
 functions. Letting $h$ tend to infinity, the asymptotic approximation quality should
 therefore be the same as of other series approximators, e.g., the Fourier series.
 
@@ -63,46 +62,50 @@ therefore be the same as of other series approximators, e.g., the Fourier series
 Similar to the Weierstra{\ss} theorem and polynomials, these theorems motivate the usage
 of neural networks for approximation tasks. However, existence results do not help when
 choosing the network architecture, and more importantly, they do not show that a neural
-network can actually learn a structure from data.
+network can learn a structure from data.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Convergence Rates
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Convergence Rates}
 
-In a strict sense neural networks are parametric estimators with (potentially) many
-parameters. Assuming that the width or depth of a network can grow with the sample size
-these estimators can be analyzed in a nonparametric setting. In nonparametric analysis
-its common to assume that the target function is $k$-smooth. In this setting the optimal
-minimax rate for the $L_2$ prediction error is $\mathcal{O}(n^{-2k/(2k+d)})$; see
-\cite{Stone.1982}. The applications where neural networks had the biggest impact require
-very large input dimensions $d$, e.g., image classifcation, where a feature vector can
-consist of $512 \times 512$ pixels. In these scenarios even huge sample sizes are not
-suffizient to compensate the slow rates. Thus, a natural questions is whether these
-rates persist for neural networks and if they can be approved upon when imposing more
-structure on the target function.
+In a strict sense, neural networks are parametric estimators with (potentially) many
+parameters. Assuming that the width or depth of a network can grow with the sample size,
+these estimators can be analyzed in a nonparametric setting. In nonparametric analysis,
+it is common to assume that the target function is $k$-smooth. In this setting, the
+optimal minimax rate for the $L_2$ prediction error is $\mathcal{O}(n^{-2k/(2k+d)})$;
+see \cite{Stone.1982}. The applications where neural networks had the most significant
+impact require very large input dimensions $d$, e.g., image classification, where a
+feature vector can consist of $512 \times 512$ pixels. In these scenarios even huge
+sample sizes are not sufficient to compensate for the slow rates. Thus, a natural
+question is whether these rates persist for neural networks and if they can be approved
+when imposing more structure on the target function.
 
-While these theoretical considerations would be by far the most interesting part,
+While these theoretical considerations would be by far the most exciting part,
 discussing them in detail would go beyond the scope of this paper. Nevertheless, let me
 present some recent papers tackling these questions.
 
 \cite{Bauer.2019} show that if the target function satisfies a $(p, C)$-smooth
 generalized hierarchical interaction model of given order $d^\ast$, for $d^\ast \leq d$,
 a deep neural network estimator defined via the solution to the least-squares problem
-\ref{eq:objective} can circument the curse-of-dimensionality and generate rates of the
-form $\mathcal{O}(n^{-{2p}/{(2p + d^\ast)}})$.
+\ref{eq:objective} can circumvent the curse-of-dimensionality and generate rates of the
+form
+\[
+\mathcal{O}\left(n^{-\frac{2p}{2p + d^\ast}}\right),
+\]
+which can be much faster than the standard rate if $d^\ast \ll d$.
 
-In practice neural networks are not estimated by directly solving the minimization
+In practice, neural networks are not estimated by directly solving the minimization
 problem \ref{eq:objective}, but through (derivations of) the gradient descent
 algorithm; see Section \ref{seq:fitting}. \cite{Bauer.2019} do not account for this
 different estimation scheme. \cite{Braun.2019} consider single-layer neural network
 estimators where the weights are learned using a gradient descent procedure. Assuming
-that the target functions follows a projection pursuit model with $(p, C)$-smooth base
+that the target function follows a projection pursuit model with $(p, C)$-smooth base
 functions, they show that a neural network fitted via gradient descent achieves an
 $L_2$ prediction error rate
 \[
-\mathcal{O}\left(\frac{\log^3 n}{n} \right)^{\frac{2p}{2p + 1}}.
+\mathcal{O}\left(\left[\frac{\log^3 n}{n} \right]^{\frac{2p}{2p + 1}}\right).
 \]
-Notably, this rate does not depend on the input dimension $d$. However, this is not
-a surprising result, since the structure of the projection pursuit model is very
-similar as the structure of a one-layer neural network.
+Notably, this rate does not depend on the input dimension $d$. However, this is not a
+surprising result since the projection pursuit model's structure is very similar to the
+structure of a one-layer neural network.

@@ -2,34 +2,33 @@
 \label{seq:introduction}
 
 With the rise of cheap computing, research and application of computer-aided statistical
-algorithm have skyrocketed. In particular machine learning, a sub-area of computational
-statistics, that lays specific focus on using algorithms has experienced the greatest
-increase in both research and its direct application in the industry. Given this success
-other research areas are trying to figure out how to incorporate these successful
-methods to improve their research; see for example \cite{Varian.2014} and
-\cite{Athey.2019}. This tasks turns out harder than expected since research in economics
+algorithms have skyrocketed. In particular, machine learning, a sub-area of
+computational statistics that focuses on using algorithms, has experienced the most
+significant increase in research and its direct application in the industry. Given this
+success, other research areas are trying to figure out how to incorporate these
+successful methods to improve their research; see, for example, \cite{Varian.2014} and
+\cite{Athey.2019}. This task turns out harder than expected since research in economics
 --or other disciplines-- is (usually) interested in inference, but machine learning is
-(usually) used for prediction. Some authors accomplished to combine problems in
-econometrics, in particular in causal inference, with machine learning methods. Most
-notably is the paper series by Susan Athey, Stefan Wager and Guido Imbens, that solves
-the estimation of heterogeneous treatment effects using tree-based machine learning
-methods; see \cite{Athey.2016} and \cite{Athey.2018}. A different approach is taken in
-the liteature on doubly robust estimation of structural parameters; see for example
+(usually) used for prediction. Some authors combined problems in econometrics,
+particularly causal inference, with machine learning methods. Most notable is the paper
+series by Susan Athey, Stefan Wager, and Guido Imbens that solves the estimation of
+heterogeneous treatment effects using tree-based machine learning methods; see
+\cite{Athey.2016} and \cite{Athey.2018}. A different approach is taken in the literature
+on doubly robust estimation of structural parameters; see for example
 \cite{Chernozhukov.2018}. The estimators studied there require the estimation of
 nuisance functions under high-level assumptions on the convergence rates. Since these
-nuisance functions are often conditional expectations this opens up the possibility to
-use arbitrary machine learning methods for the estimation. But how do machine learning
-methods fare in comparison to classical methods on prediction tasks commonly encountered
-in economics?
+nuisance functions are often conditional expectations, this opens up the possibility of
+using arbitrary machine learning methods for the estimation. A question that remains to
+be answered is whether machine learning methods perform better on typical economic
+data sets.
 
 The rest of this paper is structured as follows: In the remaining part of the
-introduction I will provide a primer on neural networks. In section \ref{seq:fitting} I
-take a closer look at fitting procedures for neural networks. I will also remark on
-regularization strategies in neural networks. These parts can be skipped if the reader
-is familiar with neural networks. In section \ref{seq:rates} I consider approximation
-theorems and convergence rates. In section \ref{seq:simulation} I present a simulation
-study comparing neural networks with linear models in different scenarios. Section
-\ref{seq:conclusion} concludes.
+introduction, I will provide a primer on neural networks. Section \ref{seq:fitting}
+lists fitting procedures and regularization strategies for neural networks. These parts
+can be skipped if the reader is familiar with neural networks. In section
+\ref{seq:rates}, I consider approximation theorems and convergence rates. Section
+\ref{seq:simulation} presents a simulation study comparing neural networks with linear
+models in different scenarios. Section \ref{seq:conclusion} concludes.
 
 % ======================================================================================
 % A Primer on Neural Networks
@@ -37,11 +36,11 @@ study comparing neural networks with linear models in different scenarios. Secti
 
 \subsection{A Primer on Neural Networks}
 
-In the remaining parts of this section I provide a small primer on feed-forward neural
+In the remaining parts of this section, I provide a small primer on feed-forward neural
 networks. I discuss the connection between their graphical and mathematical
-representation, as well as common concepts such as the activation function. Fitting
-techniques are presented in the next section. For a detailed description of neural
-networks see \cite{Goodfellow.2016, Murphy.2012} or \cite{Hastie.2008}.
+representation and common concepts such as the activation function. Fitting techniques
+are presented in the next section. For a detailed description of neural networks, see
+\cite{Goodfellow.2016, Murphy.2012} or \cite{Hastie.2008}.
 
 On a high-level, neural networks can be thought of as parametrized functions $f(\cdot;
 \theta):\mathbb{R}^p \to \mathbb{R}^l$ mapping some feature vector $x \in \mathbb{R}^p$
@@ -49,16 +48,17 @@ to the outcome space, with (potentially) high-dimensional parameter vector $\the
 \Theta$, that ship with efficient procedures to calibrate this parameter on data.
 
 The approximation quality of neural networks has been studied extensively in the
-literature. Several universal approximation theorems have been proven which show that
-under certain conditions on the network architecture they can approximate any continuous
-function arbitrary well. This will be made more precise in section \ref{seq:rates}.
+literature. Several universal approximation theorems have been proven, which show that
+under certain conditions on the network architecture, they can approximate any
+continuous function arbitrarily well. This will be made more precise in Section
+\ref{seq:rates}.
 
 % ======================================================================================
 % General Notion
 % ======================================================================================
 \paragraph{General Notion}
 
-In the remainder of this sections let us assume that the parameter vector $\theta$
+In the remainder of this section, let us assume that the parameter vector $\theta$
 has already been estimated. How does a neural network generate predictions?
 
 \begin{figure}[!ht]
@@ -118,12 +118,12 @@ with 5 nodes each and a single output node.}
 \end{figure}
 Consider the depiction of a two-layer network in figure \ref{fig:neural_net}. This
 neural network represents a function $f : \mathbb{R}^4 \to \mathbb{R}$. The input layer
-represents the feature vector, and similarly the output layer represents the outcome
-variable. The network is called two-layer because there are two hidden layers. The
-number of nodes in each layer are called the depth of that layer, and the number of
-hidden layers is called the depth of the network. In this paper I consider
+represents the feature vector; similarly, the output layer represents the outcome
+variable. The network is called a two-layer network because there are two hidden layers. The
+number of nodes in each layer is called the depth of that layer, and the number of
+hidden layers is called the depth of the network. In this paper, I consider
 fully-connected networks, which means that each node in a previous layer is connected
-with each node of the next layer. To build the bridge to the mathematical formulation
+with each node of the next layer. To build the bridge to the mathematical formulation,
 let us focus on the connection between the input layer and a single node in the first
 hidden layer. This is visualized in Figure \ref{fig:neural_net_single_connection}.
 
@@ -176,7 +176,7 @@ after the network receives an input $x = (x_1, x_2, x_3, x_4)^\top$, is defined 
 where $w \in \mathbb{R}^4$ denotes the weights of the edges and $b \in \mathbb{R}$ the
 bias term, which is associated with each hidden node. $\sigma$ denotes the activation
 function. Activation functions are motivated by biological processes in the brain. Human
-neurons require its input signal to exceed some threshold before they themselves send
+neurons require their input signal to exceed some threshold before they send
 out new signals; see \cite{Goodfellow.2016}. Activation functions try to model this
 behavior by outputting a low value when $w^\top x$ is smaller than the bias $b$, and
 outputting a larger value when $w^\top x$ overcomes the bias. Traditionally the most
@@ -204,8 +204,8 @@ which is depicted in Figure \ref{fig:sigmoid_function}.
 \caption{Sigmoid function.}\label{fig:sigmoid_function}
 \end{figure}
 
-To compute the value of a node in the second hidden layer we need more notation.
-Consider Figure \ref{fig:neural_net_double_connection} and let me now denote an
+To compute the value of a node in the second hidden layer, we need more notation.
+Consider Figure \ref{fig:neural_net_double_connection}, and let me now denote an
 arbitrary node of the second hidden layer by $h$.
 \begin{figure}[!ht]
 \centering
@@ -260,11 +260,10 @@ second hidden layer.}
 \label{fig:neural_net_double_connection}
 \end{figure}
 If we had already computed the values of the nodes $\mathbf{h}_1 = (h_1, \dots,
-h_5)^\top$ the value of $h$ would be given by the same logic as before: $h =
-\sigma(w_h^\top x + b_h)$. Here I represent the bias term for node $h$ as $b_h$ and the
-weights connecting the first layer with node $h$ as $w_h$. Letting $w_{ij}$ denote the
-weights connecting all nodes in layer $i$ with node $j$ of layer $i+1$, we know from
-before that
+h_5)^\top$ the same logic would give the value of $h$as before: $h = \sigma(w_h^\top x +
+b_h)$. Here I represent the bias term for node $h$ as $b_h$ and the weights connecting
+the first layer with node $h$ as $w_h$. Letting $w_{ij}$ denote the weights connecting
+all nodes in layer $i$ with node $j$ of layer $i+1$, we know from before that
 \begin{align*}
     \mathbf{h}_1(x) :=
         \begin{bmatrix}
@@ -274,11 +273,11 @@ before that
         \end{bmatrix}.
 \end{align*}
 We can simplify this by defining a weight matrix for each layer. For the first hidden
-layer we have $W_1 := (w_{11} \dots, w_{15})^\top$. Allowing element-wise operations on
-$\sigma$ we get $\mathbf{h}_1(x) := \sigma(W_1 x + b_1)$ and ultimately for the value of $h$
-we have $h(x) = \sigma(w_h^\top \mathbf{h}_1(x) + b_h)$. Combining all of the above we
-can write down the analytical representation of this neural network. Define $W_2$
-analoguesly to $W_1$ and let $a_0$ and $a$ denote the bias term and weight vector for
+layer, we have $W_1 := (w_{11} \dots, w_{15})^\top$. Allowing element-wise operations on
+$\sigma$ we get $\mathbf{h}_1(x) := \sigma(W_1 x + b_1)$ and ultimately for the value of
+$h$ we have $h(x) = \sigma(w_h^\top \mathbf{h}_1(x) + b_h)$. Combining all of the above,
+we can write down the analytical representation of this neural network. Define $W_2$
+analogously to $W_1$ and let $a_0$ and $a$ denote the bias term and weight vector for
 the last layer, respectively. Then,
 \begin{align*}
     f(x) &= a_0 + a^\top \mathbf{h}_2(x)\\
@@ -293,12 +292,12 @@ the last layer, respectively. Then,
 \paragraph{Extensions}
 
 The network I presented above is the bare-bone version of neural networks. A popular
-component of the model that is replaced by newer versions is the activation function;
-a comparison is presented in \cite{Hara.1994}. The optimal choice of the activation
-function depends on the problem at hand, but the state-of-the-art default is the
-ReLU function, depicted in Figure \ref{fig:relu_function}. \cite{Hinton.2017} provide
-empirical evidence that the ReLU function can improve upon the classical Sigmoid
-function by accelerating the convergence of the fitting procedure.
+model component replaced by modern versions is the activation function; a comparison is
+presented in \cite{Hara.1994}. The optimal choice of the activation function depends on
+the problem at hand, but the state-of-the-art default is the ReLU function, depicted in
+Figure \ref{fig:relu_function}. \cite{Hinton.2017} provide empirical evidence that the
+ReLU function can improve upon the classical Sigmoid function by accelerating the
+convergence of the fitting procedure.
 
 \begin{figure}[!ht]
 \centering

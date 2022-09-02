@@ -1,19 +1,19 @@
 \section{Simulation}
 \label{seq:simulation}
 
-In this section I discuss the simulation part of this paper. First, I talk about the
-study design, the employed fitting methods, and its results. Then I talk about the
-difficulties that arise when implementing industry standard machine learning methods.
-All computer codes needed to reproduce the simulation are available in the online
-repository \url{http://github.com/timmens/neural-net}.
+In this section, I discuss the simulation part of this paper. First, I discuss the study
+design, the employed fitting methods, and its results. Then I talk about the
+difficulties of implementing industry-standard machine learning methods. All computer
+codes needed to reproduce the simulation are available in the online repository
+\url{http://github.com/timmens/neural-net}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Study Design
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Study Design}
 
-The simulation is run over three different data generating processes types and three
-levels of the sample size $n \in \{100, 1.000, 10.000\}$. For each specification I
+The simulation is run over three different data generating process types and three
+levels of the sample size $n \in \{100, 1.000, 10.000\}$. For each specification, I
 simulate $100$ iterations. In each iteration, a model is fitted using training data of
 size $n$ and its predictions are evaluated on a large testing set that is simulated once
 for each specification. I measure the average square error of the predictions on the
@@ -75,12 +75,13 @@ I employ four different fitting methods in this study.
 \end{center}
 
 \begin{remark}
-Given the sparse nature of the high-dimensional data generating processes one could
-argue that its unfair to incorporate this information into the regularized network via
-a sparsity level parameter. This is a design choice I had to take since otherwise the
-training would take too long; note that for $n = 10.000$ we have $p = 1.000$ features,
-which combined with two hidden layers of size $500$ and $250$ would yield $625.000$
-parameters, which cannot be trained in a simulation context on a standard computer.
+    Given the sparse nature of the high-dimensional data generating processes, one could
+    argue that incorporating this information into the regularized network via a
+    sparsity level parameter is unfair. This is a design choice I had to take since
+    otherwise, the training would take too long; note that for $n = 10.000$ we have $p =
+    1.000$ features, which combined with two hidden layers of size $500$ and $250$ would
+    yield $625.000$ parameters, which cannot be trained in a simulation context on a
+    standard computer.
 \end{remark}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -95,31 +96,33 @@ parameters, which cannot be trained in a simulation context on a standard comput
 
 \paragraph{Training Time}
 
-When implementing simulation exercises that use many samples and many features, the
-fitting machine learning algorithms can result in very long running times. Training
-time of state-of-the-art models can take weeks on special hardware. Running these
-algorithms on Laptop CPUs can increase the training time to the extent that researchers
-cannot reproduce industry standard results since the training time becomes infeasible.
-In my simulation I had to choose relatively small networks to circumvent this problem.
-Even then, on my 2-core machine the simulation ran for 8 hours. A simple solution is to
-run the code on GPUs, which can produce speed-ups of up to 20.
+When implementing simulation exercises that use many samples and features, the fitting
+machine learning algorithms can result in long running times. The training time of
+state-of-the-art models can take weeks on special hardware. Running these algorithms on
+Laptop CPUs can increase the training time, so that researchers cannot reproduce
+industry-standard results since the training time becomes infeasible. In my simulation,
+I had to choose relatively small networks to circumvent this problem. Even then, on my
+2-core machine, the simulation ran for 8 hours. A simple solution is to run the code on
+GPUs, which can produce speed-ups of up to 20.
 
 \paragraph{Theory and Practice}
 
-There is a further problem that hinders the soundness of classical studies. Modern
-implementations of machine learning algorithms are implemented in a modular fashion and
-each component is optimized to achieve good results even under default arguments, which
-in certain cases sets hyper-parameters dependent on the data. Further, the actual
-implementation and application of these algorithms usually deviates from the
-mathematical definition. One could argue that this calls for libraries that only
-implement the theoretical specification in order to make a clearer connection between
-simulation results and theoretical arguments; however, this would miss the point that in
-practice there are not used. This is a prime example where the gap between theory
-hinders scientific analysis of these algorithms.
+There is a further problem that hinders the soundness of classical simulation studies.
+Modern machine learning algorithms are implemented modularly, and each component is
+optimized to achieve good results even under default arguments, which sometimes set
+hyper-parameters dependent on the data. Further, the actual implementation and
+application of these algorithms usually deviate from the mathematical definition. This
+loosens the connection between Monte Carlo results and theoretical arguments since the
+researcher may not even be aware that a method is optimizing some hyper-parameter by
+default. One could argue that this calls for libraries that only implement the
+theoretical specification to create a more concrete connection between simulation
+results and theoretical arguments; however, this would miss the point that in practice,
+people use algorithms with complex defaults. This is a prime example where the gap
+between theory and practice complicates a complete scientific analysis.
 
 \paragraph{Custom Implementation}
 
-Unrelated to the simulation study I implemented my own general neural network and its
-fitting procedure to better understand the technical details. Its designed for both
-classification and regression, and tested on the MNIST data set containing hand-written
+Unrelated to the simulation study, I implemented a general neural network and its
+fitting procedure to understand the technical details better. It is designed for
+classification and regression and tested on the MNIST data set containing hand-written
 digits. More details on this mini-project are described in the online repository.
