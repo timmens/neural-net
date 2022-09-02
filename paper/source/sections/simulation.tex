@@ -95,14 +95,14 @@ parameters, which cannot be trained in a simulation context on a standard comput
 
 \paragraph{Training Time}
 
-When implementing simulation exercises that use many samples and many features the usage
-of machine learning algorithm can be problematic because of very large training times.
-Training time of state-of-the-art models can take weeks on special hardware. Running
-these algorithms on Laptop CPUs can increase the training time so much that smaller
-models have to be chosen in order for the training process to converge in reasonable
-time. In my simulation I had to choose relatively small networks to circumvent this
-problem. A simple solution here is to run the code on GPUs. Since these algorithms are
-written to perform best on GPUs one can expect a speed-up of up to 20.
+When implementing simulation exercises that use many samples and many features, the
+fitting machine learning algorithms can result in very long running times. Training
+time of state-of-the-art models can take weeks on special hardware. Running these
+algorithms on Laptop CPUs can increase the training time to the extent that researchers
+cannot reproduce industry standard results since the training time becomes infeasible.
+In my simulation I had to choose relatively small networks to circumvent this problem.
+Even then, on my 2-core machine the simulation ran for 8 hours. A simple solution is to
+run the code on GPUs, which can produce speed-ups of up to 20.
 
 \paragraph{Theory and Practice}
 
