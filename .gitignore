@@ -6,9 +6,6 @@ test.ipynb
 # bld
 bld/*
 
-#pdfs
-*.pdf
-
 # latex
 paper/texmf/bst/
 paper/*.aux
