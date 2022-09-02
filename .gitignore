@@ -1,6 +1,8 @@
 # catboost
 catboost_info/
 
+.DS_Store
+
 test.ipynb
 
 # bld

@@ -52,9 +52,10 @@ is 1.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Methods}
 
-I employ four different fitting methods in this study.
+I employ four different fitting methods in this study. They are listed in Table
+\ref{tab:methods}.
 
-\begin{center}
+\begin{table}
 \begin{tabular}{r | p{0.8\linewidth}}
     \textit{OLS} & An ordinary least squares model with intercept. \\
     \textit{Lasso} & A Lasso model with intercept that uses $3$-fold cross-validation to
@@ -72,7 +73,9 @@ I employ four different fitting methods in this study.
         algorithm is run over 1.000 iterations. In each split in the regression tree
         a randomly selected subset of $20\%$ of the features is considered.
 \end{tabular}
-\end{center}
+\caption{List of methods used in the simulation study.}
+\label{tab:methods}
+\end{table}
 
 \begin{remark}
     Given the sparse nature of the high-dimensional data generating processes, one could
@@ -89,6 +92,34 @@ I employ four different fitting methods in this study.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Results}
 
+In Figure \ref{fig:simulation} the results are visualized. The rows correspond to the
+DGP types, whereas the columns, correspond to the sample sizes. The figure visualizes
+the estimated densities over the simulated iterations of the computed prediction mean
+squared error on the test set. Because all DGPs had independent additive noise with a
+variance of 0.25 we know that the minimal mean squared error is 0.25. I subtracted this
+value from all terms so that the best possible performance is achieved at 0. Let me
+briefly comment on three specifications. For the linear case --no matter the sample
+size-- we see that OLS beats boosting and the neural network. This would be expected
+since OLS uses the structure of the DGP. Similarly, for the linear high-dimensional case
+(middle row), Lasso performs best. Interestingly, the regularized network is always the
+worst. However, for the nonlinear high-dimensional case, OLS manages to beat the other
+methods on average for the small sample size, but the regularized network beats all
+other methods for the larger sample sizes.
+
+With more computational resources, it would be interesting to analyze how different
+types of architectural designs for the neural network would compare.
+
+\begin{figure}
+    \noindent\makebox[\textwidth]{%
+    \includegraphics[scale=0.8]{../bld/simulation_result.png}}
+    \caption{Simulation results: The rows correspond to DGP types \textit{Linear},
+    \textit{Linear High-dimensional} and \textit{Nonlinear High-dimensional} (starting
+    from the top row); whereas the columns correspond to the sample size in increasing
+    order: $n = 100, 1.000, 10.000$ (starting from the left column). The linear
+    correspond to density estimates over the simulation itertions.}
+    \label{fig:simulation}
+\end{figure}
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Implementation
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -102,7 +133,7 @@ state-of-the-art models can take weeks on special hardware. Running these algori
 Laptop CPUs can increase the training time, so that researchers cannot reproduce
 industry-standard results since the training time becomes infeasible. In my simulation,
 I had to choose relatively small networks to circumvent this problem. Even then, on my
-2-core machine, the simulation ran for 8 hours. A simple solution is to run the code on
+2-core machine, the simulation ran for 10 hours. A simple solution is to run the code on
 GPUs, which can produce speed-ups of up to 20.
 
 \paragraph{Theory and Practice}

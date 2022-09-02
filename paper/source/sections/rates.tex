@@ -12,19 +12,18 @@ the question if a neural network can learn a function from data.
 \subsection{Approximation Theorems}
 
 When we use neural networks to estimate functional relationships, we hope that the
-network can approximate the true function as closely as possible. A minimal assumption
-that can give us hope would be if we could be assured that there exists a neural network
-that can approximate the target function with some degree of accuracy. The well known
-Weierstra{\ss} theorem provides this result for any continuous real-valued function $f$
-defined on a closed domain $[a, b]$: For every $\epsilon > 0$ there exists a polynomial
-$q_\epsilon$ such that $\sup_{x} |f(x) - q_\epsilon(x)| < \epsilon$; for a proof consult
-any advanced real analysis textbook. Neural networks are more flexible than polynomials
-in their architecture; one can alter the number of hidden neurons per layer, the number
-of layers, or the class of activation functions. Here I present two different results.
-In the first, we consider a class of networks with one hidden layer that can grow
-arbitrarily large. In the second, I consider a class of networks with fixed width per
-layer that can grow arbitrarily deep. In both cases, the result is that under regularity
-conditions, networks can approximate any continuous functions arbitrarily well.
+network can approximate the true function as closely as possible. In the case of
+polynomials, the well known Weierstra{\ss} theorem provides this result for any
+continuous real-valued function $f$ defined on a closed domain $[a, b]$: For every
+$\epsilon > 0$ there exists a polynomial $q_\epsilon$ such that $\sup_{x} |f(x) -
+q_\epsilon(x)| < \epsilon$; for a proof consult any advanced real analysis textbook.
+Neural networks are more flexible than polynomials in their architecture; one can alter
+the number of hidden neurons per layer, the number of layers, or the class of activation
+functions. Here I present two different results. In the first, we consider a class of
+networks with one hidden layer that can grow arbitrarily large. In the second, I
+consider a class of networks with fixed width per layer that can grow arbitrarily deep.
+In both cases, the result is that under regularity conditions, networks can approximate
+any continuous functions arbitrarily well.
 
 \begin{theorem}
    Let $\sigma : \mathbb{R} \to \mathbb{R}$ be any non-polynomial continuous function.
